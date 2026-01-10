@@ -5,13 +5,13 @@
     "isShift": false,
     "members": [
       {
-        "name": "NASRULLAH",
+        "name": "JUHADI",
         "role": "KOMANDAN",
         "offset": 0,
         "dayOffset": 0
       },
       {
-        "name": "NAMA WAKIL",
+        "name": "YUNUS PINEM",
         "role": "WAKIL KOMANDAN",
         "offset": 0,
         "dayOffset": 0
@@ -24,13 +24,13 @@
     "baseOffset": 0,
     "members": [
       {
-        "name": "JUHADI",
+        "name": "NASRULLAH",
         "role": "DANRU",
         "offset": 0,
         "dayOffset": 0
       },
       {
-        "name": "YUNUS PINEM",
+        "name": "IRVAN MAULANA",
         "role": "Anggota",
         "offset": 1,
         "dayOffset": 0
@@ -67,13 +67,13 @@
         "dayOffset": 0
       },
       {
-        "name": "TARMIZI",
+        "name": "T RISKY",
         "role": "Anggota",
         "offset": 1,
         "dayOffset": 0
       },
       {
-        "name": "M. ARIF R",
+        "name": "ARIS MUNANDAR",
         "role": "Anggota",
         "offset": 2,
         "dayOffset": 0
@@ -85,7 +85,7 @@
         "dayOffset": 0
       },
       {
-        "name": "GHIOVANNY",
+        "name": "ADI",
         "role": "Anggota",
         "offset": 4,
         "dayOffset": 0
@@ -110,13 +110,13 @@
         "dayOffset": 0
       },
       {
-        "name": "ARISETARA",
+        "name": "KHAIRUL HADI",
         "role": "Anggota",
         "offset": 2,
         "dayOffset": 0
       },
       {
-        "name": "ARIFFIANSYAH",
+        "name": "HUSAINI",
         "role": "Anggota",
         "offset": 3,
         "dayOffset": 0
