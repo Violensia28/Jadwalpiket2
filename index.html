@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jadwal Satpam 2026 - v5.1 Tanda Tangan Resmi</title>
+    <!-- Framework & Library -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Roboto', sans-serif; background: #f0f9ff; }
+        .custom-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
+        .schedule-table th, .schedule-table td { border: 1px solid #cbd5e1; }
+        
+        .sticky-col { position: sticky; z-index: 10; border-right: 2px solid #cbd5e1 !important; }
+        .editable-input { width: 100%; background: #fff; border: 1px solid #94a3b8; padding: 2px 4px; font-weight: bold; border-radius: 4px; font-size: 11px; }
+        .cell-selector { background: transparent; font-size: 9px; font-weight: bold; width: 100%; height: 100%; cursor: pointer; border: none; text-align: center; appearance: none; -webkit-appearance: none; }
+        .holiday-date { background-color: #fee2e2 !important; color: #b91c1c !important; }
+
+        /* Status Indicator */
+        .sync-status { font-size: 10px; font-weight: bold; padding: 2px 8px; border-radius: 99px; transition: all 0.3s; }
+        .status-idle { background: #e2e8f0; color: #64748b; }
+        .status-loading { background: #fef08a; color: #854d0e; }
+        .status-success { background: #dcfce7; color: #166534; }
+        .status-error { background: #fee2e2; color: #991b1b; }
+
+        @media print {
+            @page { size: A4 landscape; margin: 5mm; }
+            body { background: white; -webkit-print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            .print-container { width: 100% !important; max-width: none !important; overflow: visible !important; box-shadow: none !important; border: none !important; }
+            table { font-size: 7pt; width: 100%; border-collapse: collapse; }
+            th, td { padding: 1px !important; border: 1px solid #000 !important; }
+            /* Memastikan TTD tidak terpotong ke halaman lain */
+            .signature-section { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body class="p-2 md:p-6 text-slate-800">
+
+    <!-- CONTROL PANEL -->
+    <div class="max-w-[1400px] mx-auto mb-4 bg-white p-4 rounded-xl shadow-lg border-t-4 border-slate-700 flex flex-col gap-4 no-print">
+        <div class="flex flex-wrap gap-4 justify-between items-center border-b border-slate-100 pb-4">
+            <div class="flex items-center gap-4">
+                <div class="bg-slate-800 text-white p-3 rounded-lg shadow-lg"><i class="fab fa-github fa-lg"></i></div>
+                <div>
+                    <h1 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sistem Penjadwalan Cloud</h1>
+                    <div class="flex items-center">
+                        <select id="monthSelector" onchange="renderSchedule()" class="border-none bg-transparent font-bold text-xl outline-none cursor-pointer text-slate-800 p-0 mr-2">
+                            <!-- Options via JS -->
+                        </select>
+                        <span class="text-xl font-bold text-slate-700">2026</span>
+                    </div>
+                    <!-- Status Sync -->
+                    <div id="syncStatus" class="sync-status status-idle inline-block mt-1">
+                        <i class="fas fa-circle text-[6px] mr-1"></i> Offline / Local
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-2 flex-wrap items-center justify-end">
+                <button onclick="showGithubModal()" class="px-4 py-2 bg-gray-800 hover:bg-black text-white rounded shadow text-xs font-bold transition-all flex items-center gap-2">
+                    <i class="fas fa-cloud-upload-alt"></i> <span>Setup Cloud</span>
+                </button>
+                 <button onclick="manualPull()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow text-xs font-bold transition-all flex items-center gap-2">
+                    <i class="fas fa-sync-alt"></i> <span>Refresh Data</span>
+                </button>
+                <button onclick="toggleEditMode()" id="btnEdit" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded shadow text-xs font-bold transition-all flex items-center gap-2">
+                    <i class="fas fa-edit"></i> <span id="btnEditText">Edit Manual</span>
+                </button>
+                <button onclick="downloadPDF()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded shadow text-xs font-bold transition-all flex items-center gap-2">
+                    <i class="fas fa-file-pdf"></i> <span>PDF</span>
+                </button>
+                <button id="btnLogin" onclick="loginAdmin()" class="px-4 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded shadow text-xs font-bold transition-all">
+                    <i class="fas fa-lock"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ADMIN PANEL -->
+        <div id="adminPanel" class="hidden bg-slate-50 p-4 rounded-lg border border-slate-200 border-l-4 border-l-slate-500 transition-all duration-300">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-xs font-bold text-slate-900 uppercase"><i class="fas fa-user-cog mr-2"></i>Manajemen Personil</h3>
+                <div class="flex gap-2">
+                    <button onclick="forcePushToGithub()" class="text-[10px] bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700">Force Push Cloud</button>
+                    <button onclick="resetData()" class="text-[10px] text-red-500 hover:underline">Reset Local</button>
+                </div>
+            </div>
+            <div class="flex flex-wrap items-end gap-2">
+                <input type="text" id="newMemberName" placeholder="NAMA..." class="flex-1 min-w-[150px] border border-slate-300 p-2 rounded text-xs uppercase font-bold">
+                <select id="newMemberRegu" class="w-32 border border-slate-300 p-2 rounded text-xs bg-white cursor-pointer">
+                    <option value="0">PIMPINAN</option>
+                    <option value="1">REGU I</option>
+                    <option value="2">REGU II</option>
+                    <option value="3">REGU III</option>
+                </select>
+                <select id="newMemberRole" class="w-32 border border-slate-300 p-2 rounded text-xs bg-white cursor-pointer">
+                    <option value="Anggota">Anggota</option>
+                    <option value="DANRU">DANRU</option>
+                    <option value="WAKIL KOMANDAN">WAKIL</option>
+                    <option value="KOMANDAN">KOMANDAN</option>
+                </select>
+                <button onclick="addNewMember()" class="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded text-xs font-bold">
+                    + Tambah
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN SCHEDULE -->
+    <div id="contentToPrint" class="print-container max-w-[1400px] mx-auto bg-white shadow-xl border border-slate-300 rounded-lg overflow-hidden">
+        <div class="p-6 border-b-2 border-slate-800 text-center bg-white relative">
+            <div class="absolute top-2 right-2 border border-blue-200 bg-blue-50 text-blue-700 px-2 py-1 rounded text-[8px] font-bold uppercase tracking-wider hidden md:block">
+                <i class="fab fa-github"></i> Connected
+            </div>
+            <h1 class="text-2xl font-bold uppercase tracking-[0.2em] text-slate-900 mb-1">Daftar Piket Penjagaan Satpam</h1>
+            <h2 class="text-lg font-bold uppercase text-slate-600 mb-4">BPK Perwakilan Provinsi Aceh</h2>
+            <div class="inline-block border-y-2 border-slate-300 px-12 py-1 bg-slate-50">
+                <p class="text-xs font-bold uppercase text-slate-700">Periode: <span id="periodLabel" class="text-slate-700">Januari 2026</span></p>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto custom-scroll" id="tableContainer">
+            <table class="w-full text-left border-collapse schedule-table min-w-[1200px]">
+                <thead>
+                    <tr class="bg-slate-800 text-white text-[10px] uppercase tracking-wider">
+                        <th class="p-1 w-8 text-center">No</th>
+                        <th class="p-1 w-32 sticky-col bg-slate-800 left-0 z-10 border-r border-slate-600">Jabatan</th>
+                        <th class="p-1 w-56 sticky-col bg-slate-800 left-[128px] z-10 border-r border-slate-600 shadow-xl">Nama Petugas</th>
+                        <!-- Dates injected by JS -->
+                    </tr>
+                    <tr class="bg-slate-100 text-slate-700 text-[9px] text-center font-bold uppercase" id="daysRow">
+                        <th colspan="3" class="bg-slate-200 sticky-col left-0 z-10 border-r border-slate-300">HARI</th>
+                        <!-- Day names injected by JS -->
+                    </tr>
+                </thead>
+                <tbody id="scheduleBody" class="text-[10px] font-medium text-slate-700 bg-white"></tbody>
+            </table>
+        </div>
+
+        <!-- FOOTER / LEGEND & TTD -->
+        <div class="bg-white border-t-2 border-slate-800">
+            <!-- Bagian Atas Footer (Legend & Aturan) -->
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-[10px] border-b border-slate-200">
+                <div class="border border-slate-200 p-3 rounded bg-slate-50">
+                    <h3 class="font-bold underline mb-2 text-slate-900">KODE JADWAL:</h3>
+                    <div class="grid grid-cols-4 gap-2">
+                        <div><span class="inline-block w-2 h-2 bg-orange-500 rounded-full mr-1"></span><b>K:</b> Kantor</div>
+                        <div><span class="inline-block w-2 h-2 bg-emerald-500 rounded-full mr-1"></span><b>B:</b> Batoh</div>
+                        <div><span class="inline-block w-2 h-2 bg-indigo-500 rounded-full mr-1"></span><b>S:</b> Stui</div>
+                        <div class="text-red-600"><span class="inline-block w-2 h-2 bg-red-500 rounded-full mr-1"></span><b>L:</b> Libur</div>
+                    </div>
+                </div>
+                <div class="border border-slate-200 p-3 rounded bg-slate-50">
+                    <h3 class="font-bold underline mb-2 text-slate-900">CATATAN:</h3>
+                    <ul class="list-disc pl-4 space-y-1">
+                        <li>Pimpinan Libur Bergantian saat Tanggal Merah.</li>
+                        <li>Sinkronisasi Cloud Aktif.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Bagian Tanda Tangan (Signature Section) -->
+            <div class="signature-section p-8 pb-12 grid grid-cols-2 gap-8 text-[11px] text-slate-900">
+                
+                <!-- TTD Kiri -->
+                <div class="flex flex-col items-center text-center">
+                    <p class="mb-1">Mengetahui,</p>
+                    <p class="font-bold uppercase mb-20">Kasubbag Umum & TI</p>
+                    <p class="font-bold underline uppercase tracking-wide">Wirahman Salvana</p>
+                    <p class="text-[10px] text-slate-500">NIP. 199301142018011002</p>
+                </div>
+
+                <!-- TTD Kanan -->
+                <div class="flex flex-col items-center text-center">
+                    <p class="mb-1">Banda Aceh, <span id="signDate">...... Januari 2026</span></p>
+                    <p class="font-bold uppercase mb-20">Komandan Satpam</p>
+                    <p class="font-bold underline uppercase tracking-wide">Juhadi</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- GITHUB SETTINGS MODAL -->
+    <div id="githubModal" class="fixed inset-0 bg-black bg-opacity-80 hidden z-50 flex items-center justify-center p-4 no-print">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden border border-slate-600">
+            <div class="bg-slate-800 p-4 flex justify-between items-center text-white">
+                <h3 class="font-bold text-sm uppercase"><i class="fab fa-github mr-2"></i>Pengaturan GitHub Cloud</h3>
+                <button onclick="document.getElementById('githubModal').classList.add('hidden')" class="hover:text-red-300 text-xl">&times;</button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-xs text-slate-500 bg-slate-100 p-2 rounded">
+                    Data akan disimpan di Repository GitHub Anda (file: <code>jadwal_data.json</code>). Token disimpan aman di browser Anda.
+                </p>
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">GitHub Username</label>
+                    <input type="text" id="ghUsername" placeholder="Contoh: wirahman" class="w-full border p-2 rounded text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Repository Name</label>
+                    <input type="text" id="ghRepo" placeholder="Contoh: jadwal-satpam" class="w-full border p-2 rounded text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Personal Access Token (Classic)</label>
+                    <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx" class="w-full border p-2 rounded text-xs">
+                    <p class="text-[9px] text-red-500 mt-1">*Wajib centang scope: <b>repo</b> saat buat token.</p>
+                </div>
+
+                <button onclick="saveGithubConfig()" class="w-full bg-slate-800 hover:bg-black text-white py-2 rounded text-xs font-bold">
+                    SIMPAN & HUBUNGKAN
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const year = 2026;
+        const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        const dayNamesIndo = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+        const ADMIN_PASS = "admin123";
+
+        // --- HOLIDAYS ---
+        const holidays2026 = [
+            "2026-0-1", "2026-0-27", "2026-1-17", "2026-2-20", "2026-2-31", 
+            "2026-3-1", "2026-4-1", "2026-4-14", "2026-4-25", "2026-5-1", 
+            "2026-5-17", "2026-6-7", "2026-7-17", "2026-9-20", "2026-11-25"
+        ];
+
+        const SEQ_5 = ["K", "K", "S", "K", "B"]; 
+
+        let staffData = [];
+        let currentMonth = 0;
+        let isEditMode = false;
+        let isAdmin = false;
+        
+        // --- GITHUB CONFIG ---
+        let ghConfig = {
+            owner: '',
+            repo: '',
+            token: '',
+            path: 'jadwal_data.json'
+        };
+
+        window.onload = async function() {
+            // Load GH Config first
+            const savedGH = localStorage.getItem('gh_config_satpam');
+            if(savedGH) {
+                ghConfig = JSON.parse(savedGH);
+                // Attempt auto-sync on load
+                await syncFromGithub();
+            } else {
+                loadDataLocal(); // Fallback to local if no cloud
+            }
+
+            const select = document.getElementById('monthSelector');
+            months.forEach((m, index) => {
+                const opt = document.createElement('option');
+                opt.value = index; opt.innerText = m; select.appendChild(opt);
+            });
+            
+            if(sessionStorage.getItem('satpam_admin') === 'true') { isAdmin = true; updateAdminUI(); }
+            renderSchedule();
+        };
+
+        // --- DATA MANAGEMENT (CLOUD FIRST) ---
+        
+        // 1. Setup GitHub
+        function showGithubModal() {
+            document.getElementById('githubModal').classList.remove('hidden');
+            document.getElementById('ghUsername').value = ghConfig.owner;
+            document.getElementById('ghRepo').value = ghConfig.repo;
+            document.getElementById('ghToken').value = ghConfig.token;
+        }
+
+        function saveGithubConfig() {
+            ghConfig.owner = document.getElementById('ghUsername').value.trim();
+            ghConfig.repo = document.getElementById('ghRepo').value.trim();
+            ghConfig.token = document.getElementById('ghToken').value.trim();
+            
+            if(!ghConfig.owner || !ghConfig.repo || !ghConfig.token) {
+                alert("Semua data wajib diisi!");
+                return;
+            }
+
+            localStorage.setItem('gh_config_satpam', JSON.stringify(ghConfig));
+            document.getElementById('githubModal').classList.add('hidden');
+            
+            syncFromGithub(true);
+        }
+
+        // 2. Pull Data (Download)
+        async function syncFromGithub(isInit = false) {
+            updateStatus('loading', 'Syncing...');
+            
+            try {
+                const url = `https://api.github.com/repos/${ghConfig.owner}/${ghConfig.repo}/contents/${ghConfig.path}`;
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `token ${ghConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    },
+                    cache: "no-store" 
+                });
+
+                if (response.status === 404) {
+                    if (isInit) {
+                        await pushToGithub();
+                    } else {
+                        updateStatus('error', 'File not found');
+                    }
+                    return;
+                }
+
+                if (!response.ok) throw new Error('Github Error');
+
+                const data = await response.json();
+                const content = decodeURIComponent(escape(atob(data.content)));
+                staffData = JSON.parse(content);
+                
+                // Update Local Storage as backup
+                localStorage.setItem('satpamData2026_v5', JSON.stringify(staffData));
+                
+                renderSchedule();
+                updateStatus('success', 'Cloud Connected');
+
+            } catch (error) {
+                console.error(error);
+                updateStatus('error', 'Sync Failed');
+                loadDataLocal();
+            }
+        }
+
+        // 3. Push Data (Upload)
+        async function pushToGithub() {
+            updateStatus('loading', 'Uploading...');
+            
+            try {
+                // 1. Get current SHA
+                const url = `https://api.github.com/repos/${ghConfig.owner}/${ghConfig.repo}/contents/${ghConfig.path}`;
+                let sha = null;
+
+                const getRes = await fetch(url, {
+                    headers: { 'Authorization': `token ${ghConfig.token}` },
+                    cache: "no-store"
+                });
+
+                if (getRes.ok) {
+                    const getData = await getRes.json();
+                    sha = getData.sha;
+                }
+
+                // 2. Prepare Payload
+                const contentStr = JSON.stringify(staffData, null, 2);
+                const contentBase64 = btoa(unescape(encodeURIComponent(contentStr)));
+
+                const body = {
+                    message: "Update Jadwal Satpam via Web App",
+                    content: contentBase64,
+                    sha: sha 
+                };
+
+                // 3. PUT Request
+                const putRes = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${ghConfig.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                if (!putRes.ok) throw new Error('Upload Failed');
+
+                updateStatus('success', 'Data Saved to Cloud');
+                
+            } catch (error) {
+                console.error(error);
+                updateStatus('error', 'Upload Error');
+                alert("Gagal Upload ke GitHub. Cek Token/Koneksi.");
+            }
+        }
+
+        function forcePushToGithub() {
+            if(confirm("Timpa data di Cloud dengan data Lokal saat ini?")) {
+                pushToGithub();
+            }
+        }
+
+        function manualPull() {
+             syncFromGithub();
+        }
+
+        function updateStatus(type, msg) {
+            const el = document.getElementById('syncStatus');
+            el.className = `sync-status status-${type} inline-block mt-1`;
+            el.innerHTML = `<i class="fas fa-circle text-[6px] mr-1"></i> ${msg}`;
+        }
+
+        // --- LOCAL DATA FALLBACK ---
+        function loadDataLocal() {
+            const stored = localStorage.getItem('satpamData2026_v5');
+            if (stored) {
+                staffData = JSON.parse(stored);
+            } else {
+                staffData = [
+                    { id: "pimpinan", teamName: "I. PIMPINAN (OPERASIONAL)", isShift: false, members: [
+                        { name: "NASRULLAH", role: "KOMANDAN", offset: 0, dayOffset: 0 },
+                        { name: "NAMA WAKIL", role: "WAKIL KOMANDAN", offset: 0, dayOffset: 0 } 
+                    ]},
+                    { id: "regu1", teamName: "II. REGU I (5 PERSONIL)", baseOffset: 0, members: [
+                        { name: "JUHADI", role: "DANRU", offset: 0, dayOffset: 0 }, 
+                        { name: "YUNUS PINEM", role: "Anggota", offset: 1, dayOffset: 0 },
+                        { name: "MUNAWIR", role: "Anggota", offset: 2, dayOffset: 0 },
+                        { name: "ZULFIADI", role: "Anggota", offset: 3, dayOffset: 0 },
+                        { name: "HANAFI", role: "Anggota", offset: 4, dayOffset: 0 }
+                    ]},
+                    { id: "regu2", teamName: "III. REGU II (5 PERSONIL)", baseOffset: 1, members: [
+                        { name: "AGUS FADLI", role: "DANRU", offset: 0, dayOffset: 0 },
+                        { name: "TARMIZI", role: "Anggota", offset: 1, dayOffset: 0 },
+                        { name: "M. ARIF R", role: "Anggota", offset: 2, dayOffset: 0 },
+                        { name: "ARIF PRAWIRA", role: "Anggota", offset: 3, dayOffset: 0 },
+                        { name: "GHIOVANNY", role: "Anggota", offset: 4, dayOffset: 0 }
+                    ]},
+                    { id: "regu3", teamName: "IV. REGU III (5 PERSONIL)", baseOffset: 2, members: [
+                        { name: "MAWARDI", role: "DANRU", offset: 0, dayOffset: 0 },
+                        { name: "ZULFIKAR", role: "Anggota", offset: 1, dayOffset: 0 },
+                        { name: "ARISETARA", role: "Anggota", offset: 2, dayOffset: 0 },
+                        { name: "ARIFFIANSYAH", role: "Anggota", offset: 3, dayOffset: 0 },
+                        { name: "AMIRJAN", role: "Anggota", offset: 4, dayOffset: 0 }
+                    ]}
+                ];
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('satpamData2026_v5', JSON.stringify(staffData));
+        }
+
+        function resetData() { if(confirm("Reset Data Lokal?")) { localStorage.removeItem('satpamData2026_v5'); location.reload(); }}
+
+        // --- AUTH ---
+        function loginAdmin() {
+            const pass = prompt("Password Admin:");
+            if (pass === ADMIN_PASS) { isAdmin = true; sessionStorage.setItem('satpam_admin', 'true'); updateAdminUI(); alert("Admin Mode Aktif"); }
+        }
+        function updateAdminUI() {
+            document.getElementById('adminPanel').classList.toggle('hidden', !isAdmin);
+            document.getElementById('btnLogin').classList.add('hidden');
+        }
+
+        // --- LOGIC HELPERS ---
+        function getDayOfYear(d) {
+            const start = new Date(year, 0, 1);
+            return Math.floor((d - start) / (1000 * 60 * 60 * 24));
+        }
+
+        function isHoliday(year, month, day) {
+            const key = `${year}-${month}-${day}`;
+            return holidays2026.includes(key);
+        }
+
+        function getHolidayIndex(year, month, day) {
+            const key = `${year}-${month}-${day}`;
+            return holidays2026.indexOf(key);
+        }
+
+        function getShiftFromSequence(dateObj, dayOfYear, group, member, reguSize) {
+            if (group.id === "pimpinan") {
+                const isHol = isHoliday(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+                if (isHol) {
+                    const holIdx = getHolidayIndex(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+                    const isGenap = (holIdx % 2 === 0);
+                    if (member.role.includes("KOMANDAN") && !member.role.includes("WAKIL")) {
+                        return (isGenap) ? { code: "L", cls: "bg-red-100 text-red-700 font-bold border-red-300" } : { code: "PK", cls: "bg-orange-100 text-orange-800 font-bold border-orange-300" };
+                    } else if (member.role.includes("WAKIL")) {
+                        return (isGenap) ? { code: "PK", cls: "bg-orange-100 text-orange-800 font-bold border-orange-300" } : { code: "L", cls: "bg-red-100 text-red-700 font-bold border-red-300" };
+                    }
+                }
+                const day = dateObj.getDay();
+                if (day === 0 || day === 6) return { code: "L", cls: "bg-red-100 text-red-700" };
+                return { code: "PK", cls: "bg-orange-100 text-orange-800" };
+            }
+
+            const dayInCycle = (dayOfYear + group.baseOffset + (member.dayOffset || 0)) % 3;
+            const cycleIndex = Math.floor((dayOfYear + group.baseOffset + (member.dayOffset || 0)) / 3);
+            if (dayInCycle === 2) return { code: "L", cls: "bg-red-100 text-red-700 border-slate-200" };
+
+            const seq = SEQ_5; 
+            const pos = (member.offset + cycleIndex) % seq.length;
+            const loc = seq[pos];
+            const prefix = (dayInCycle === 0) ? "P" : "M";
+            let cls = "";
+            if (loc === "K") cls = (dayInCycle === 0) ? "bg-orange-100 text-orange-800" : "bg-orange-50 text-orange-700";
+            else if (loc === "B") cls = (dayInCycle === 0) ? "bg-emerald-100 text-emerald-800" : "bg-emerald-50 text-emerald-700";
+            else cls = (dayInCycle === 0) ? "bg-indigo-100 text-indigo-800" : "bg-indigo-50 text-indigo-700";
+
+            return { code: prefix + loc, cls: cls + " border-slate-200" };
+        }
+
+        // --- RENDER ENGINE ---
+        function renderSchedule() {
+            currentMonth = parseInt(document.getElementById('monthSelector').value);
+            const totalDays = new Date(year, currentMonth + 1, 0).getDate();
+            const tableHeadRow = document.querySelector('thead tr:first-child');
+            const tableDaysRow = document.getElementById('daysRow');
+            const tbody = document.getElementById('scheduleBody');
+            
+            document.getElementById('periodLabel').innerText = `${months[currentMonth]} ${year}`;
+            
+            // UPDATE TANGGAL DI TANDA TANGAN
+            document.getElementById('signDate').innerText = `...... ${months[currentMonth]} ${year}`;
+
+            while (tableHeadRow.children.length > 3) tableHeadRow.removeChild(tableHeadRow.lastChild);
+            while (tableDaysRow.children.length > 1) tableDaysRow.removeChild(tableDaysRow.lastChild);
+            tbody.innerHTML = '';
+
+            for (let d = 1; d <= totalDays; d++) {
+                const dateObj = new Date(year, currentMonth, d);
+                const isSun = dateObj.getDay() === 0;
+                const isHol = isHoliday(year, currentMonth, d);
+                const thNum = document.createElement('th');
+                thNum.className = `p-1 text-center min-w-[32px] font-bold ${isHol ? 'bg-red-500 text-white' : (isSun ? 'bg-red-100 text-red-700' : 'text-slate-500')}`;
+                thNum.innerText = d;
+                tableHeadRow.appendChild(thNum);
+                const thDay = document.createElement('th');
+                thDay.className = `p-1 text-center text-[8px] ${isHol ? 'bg-red-100 text-red-700 font-bold' : (isSun ? 'text-red-600 bg-red-50' : 'text-slate-400')}`;
+                thDay.innerText = dayNamesIndo[dateObj.getDay()];
+                tableDaysRow.appendChild(thDay);
+            }
+
+            staffData.forEach((group, groupIdx) => {
+                const trGroup = document.createElement('tr');
+                trGroup.className = "bg-slate-100 font-bold border-b border-slate-300 uppercase";
+                trGroup.innerHTML = `<td colspan="3" class="p-2 border sticky-col left-0 bg-slate-100 z-10 text-[10px] tracking-wider">${group.teamName}</td><td colspan="${totalDays}"></td>`;
+                tbody.appendChild(trGroup);
+
+                group.members.forEach((member, memberIdx) => {
+                    const tr = document.createElement('tr');
+                    let nameDisplay = member.name;
+                    let controls = "";
+                    if(isEditMode && isAdmin) {
+                        nameDisplay = `<input type="text" value="${member.name}" onchange="staffData[${groupIdx}].members[${memberIdx}].name=this.value.toUpperCase();saveData()" class="editable-input uppercase">`;
+                        controls = `<div class="mt-1"><button onclick="if(confirm('Hapus?')){staffData[${groupIdx}].members.splice(${memberIdx},1);saveData();renderSchedule();}" class="text-red-500 text-[8px]"><i class="fas fa-trash"></i> Hapus</button></div>`;
+                    }
+                    tr.innerHTML = `<td class="text-center text-[10px] text-slate-400 font-bold">${memberIdx + 1}</td><td class="p-1 px-3 border-r sticky-col left-0 bg-white text-[9px] font-bold text-slate-500 uppercase">${member.role}</td><td class="p-1 px-3 border-r sticky-col left-[128px] bg-white shadow-md font-bold text-slate-800 whitespace-nowrap">${nameDisplay}${controls}</td>`;
+
+                    for (let d = 1; d <= totalDays; d++) {
+                        const dateObj = new Date(year, currentMonth, d);
+                        const dayOfYear = getDayOfYear(dateObj);
+                        const res = getShiftFromSequence(dateObj, dayOfYear, group, member, group.members.length);
+                        const td = document.createElement('td');
+                        td.className = `text-center text-[10px] font-bold ${res.cls} border p-0`;
+                        
+                        if (isEditMode && isAdmin && group.id !== 'pimpinan') {
+                            const sel = document.createElement('select');
+                            sel.className = `cell-selector ${res.cls}`;
+                            ["L", "PK", "MK", "PB", "MB", "PS", "MS"].forEach(opt => {
+                                const o = document.createElement('option'); o.value = opt; o.innerText = opt;
+                                if(opt === res.code) o.selected = true; sel.appendChild(o);
+                            });
+                            sel.onchange = (e) => { findOffsetsFromTarget(groupIdx, memberIdx, dayOfYear, e.target.value); renderSchedule(); };
+                            td.appendChild(sel);
+                        } else {
+                            td.innerText = res.code;
+                        }
+                        tr.appendChild(td);
+                    }
+                    tbody.appendChild(tr);
+                });
+            });
+        }
+
+        function findOffsetsFromTarget(groupIdx, memberIdx, dayOfYear, targetCode) {
+            const group = staffData[groupIdx];
+            const member = group.members[memberIdx];
+            const seqLen = 5;
+
+            if (targetCode === "L") {
+                for (let dof = 0; dof < 3; dof++) {
+                    if ((dayOfYear + group.baseOffset + dof) % 3 === 2) { member.dayOffset = dof; saveData(); return true; }
+                }
+            } else {
+                for (let dof = 0; dof < 3; dof++) {
+                    if ((dayOfYear + group.baseOffset + dof) % 3 === 2) continue;
+                    const dCycle = (dayOfYear + group.baseOffset + dof) % 3;
+                    const pref = (dCycle === 0) ? "P" : "M";
+                    if (targetCode.charAt(0) !== pref) continue;
+                    for (let mof = 0; mof < seqLen; mof++) {
+                        const res = getShiftFromSequence(new Date(), dayOfYear, group, {offset: mof}, 5); 
+                        if (res.code === targetCode) { member.dayOffset = dof; member.offset = mof; saveData(); return true; }
+                    }
+                }
+            }
+            return false;
+        }
+
+        function toggleEditMode() { 
+            isEditMode = !isEditMode; 
+            document.getElementById('btnEditText').innerText = isEditMode ? "Simpan & Upload" : "Edit Manual"; 
+            
+            // Auto Push on Save (Exit Edit Mode)
+            if(!isEditMode && ghConfig.token) {
+                pushToGithub();
+            }
+            
+            renderSchedule(); 
+        }
+        
+        function addNewMember() {
+            const name = document.getElementById('newMemberName').value.trim().toUpperCase(); if(!name) return;
+            const rIdx = parseInt(document.getElementById('newMemberRegu').value);
+            const role = document.getElementById('newMemberRole').value;
+            staffData[rIdx].members.push({ name: name, role: role, offset: 0, dayOffset: 0 });
+            saveData(); 
+            // Trigger push if online
+            if(ghConfig.token) pushToGithub();
+            renderSchedule(); 
+            document.getElementById('newMemberName').value = "";
+        }
+
+        function downloadPDF() {
+            const el = document.getElementById('contentToPrint');
+            const table = document.getElementById('tableContainer');
+            const oldStyle = table.style.overflow; table.style.overflow = "visible";
+            const opt = { margin: [5, 5, 5, 5], filename: `Jadwal_Satpam_${months[currentMonth]}_${year}.pdf`, image: {type:'jpeg',quality:0.98}, html2canvas: {scale:2.5, useCORS: true}, jsPDF: {unit:'mm', format:'a4', orientation:'landscape'} };
+            html2pdf().set(opt).from(el).save().then(() => table.style.overflow = oldStyle);
+        }
+    </script>
+</body>
+</html>
