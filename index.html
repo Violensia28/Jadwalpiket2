@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jadwal Satpam 2026 - v5.1 Tanda Tangan Resmi</title>
+    <title>Jadwal Satpam 2026</title>
     <!-- Framework & Library -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -28,6 +28,7 @@
         .status-loading { background: #fef08a; color: #854d0e; }
         .status-success { background: #dcfce7; color: #166534; }
         .status-error { background: #fee2e2; color: #991b1b; }
+        .status-public { background: #dbeafe; color: #1e40af; }
 
         @media print {
             @page { size: A4 landscape; margin: 5mm; }
@@ -36,7 +37,6 @@
             .print-container { width: 100% !important; max-width: none !important; overflow: visible !important; box-shadow: none !important; border: none !important; }
             table { font-size: 7pt; width: 100%; border-collapse: collapse; }
             th, td { padding: 1px !important; border: 1px solid #000 !important; }
-            /* Memastikan TTD tidak terpotong ke halaman lain */
             .signature-section { page-break-inside: avoid; }
         }
     </style>
@@ -49,7 +49,7 @@
             <div class="flex items-center gap-4">
                 <div class="bg-slate-800 text-white p-3 rounded-lg shadow-lg"><i class="fab fa-github fa-lg"></i></div>
                 <div>
-                    <h1 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sistem Penjadwalan Cloud</h1>
+                    <h1 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sistem Penjadwalan Terpadu</h1>
                     <div class="flex items-center">
                         <select id="monthSelector" onchange="renderSchedule()" class="border-none bg-transparent font-bold text-xl outline-none cursor-pointer text-slate-800 p-0 mr-2">
                             <!-- Options via JS -->
@@ -58,37 +58,34 @@
                     </div>
                     <!-- Status Sync -->
                     <div id="syncStatus" class="sync-status status-idle inline-block mt-1">
-                        <i class="fas fa-circle text-[6px] mr-1"></i> Offline / Local
+                        <i class="fas fa-circle text-[6px] mr-1"></i> Memuat Data...
                     </div>
                 </div>
             </div>
 
             <div class="flex gap-2 flex-wrap items-center justify-end">
-                <button onclick="showGithubModal()" class="px-4 py-2 bg-gray-800 hover:bg-black text-white rounded shadow text-xs font-bold transition-all flex items-center gap-2">
-                    <i class="fas fa-cloud-upload-alt"></i> <span>Setup Cloud</span>
+                <button onclick="showGithubModal()" class="px-4 py-2 bg-gray-800 hover:bg-black text-white rounded shadow text-xs font-bold transition-all flex items-center gap-2 hidden" id="btnSetupCloud">
+                    <i class="fas fa-key"></i> <span>Admin Login</span>
                 </button>
-                 <button onclick="manualPull()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow text-xs font-bold transition-all flex items-center gap-2">
-                    <i class="fas fa-sync-alt"></i> <span>Refresh Data</span>
+                 <button onclick="reloadData()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow text-xs font-bold transition-all flex items-center gap-2">
+                    <i class="fas fa-sync-alt"></i> <span>Refresh</span>
                 </button>
-                <button onclick="toggleEditMode()" id="btnEdit" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded shadow text-xs font-bold transition-all flex items-center gap-2">
+                <button onclick="toggleEditMode()" id="btnEdit" class="hidden px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded shadow text-xs font-bold transition-all flex items-center gap-2">
                     <i class="fas fa-edit"></i> <span id="btnEditText">Edit Manual</span>
                 </button>
                 <button onclick="downloadPDF()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded shadow text-xs font-bold transition-all flex items-center gap-2">
                     <i class="fas fa-file-pdf"></i> <span>PDF</span>
                 </button>
-                <button id="btnLogin" onclick="loginAdmin()" class="px-4 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded shadow text-xs font-bold transition-all">
-                    <i class="fas fa-lock"></i>
-                </button>
             </div>
         </div>
 
-        <!-- ADMIN PANEL -->
+        <!-- ADMIN PANEL (Hidden for Public) -->
         <div id="adminPanel" class="hidden bg-slate-50 p-4 rounded-lg border border-slate-200 border-l-4 border-l-slate-500 transition-all duration-300">
             <div class="flex justify-between items-center mb-2">
-                <h3 class="text-xs font-bold text-slate-900 uppercase"><i class="fas fa-user-cog mr-2"></i>Manajemen Personil</h3>
+                <h3 class="text-xs font-bold text-slate-900 uppercase"><i class="fas fa-user-cog mr-2"></i>Manajemen Personil (Admin Mode)</h3>
                 <div class="flex gap-2">
                     <button onclick="forcePushToGithub()" class="text-[10px] bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700">Force Push Cloud</button>
-                    <button onclick="resetData()" class="text-[10px] text-red-500 hover:underline">Reset Local</button>
+                    <button onclick="logoutAdmin()" class="text-[10px] text-red-500 hover:underline">Logout Admin</button>
                 </div>
             </div>
             <div class="flex flex-wrap items-end gap-2">
@@ -116,7 +113,7 @@
     <div id="contentToPrint" class="print-container max-w-[1400px] mx-auto bg-white shadow-xl border border-slate-300 rounded-lg overflow-hidden">
         <div class="p-6 border-b-2 border-slate-800 text-center bg-white relative">
             <div class="absolute top-2 right-2 border border-blue-200 bg-blue-50 text-blue-700 px-2 py-1 rounded text-[8px] font-bold uppercase tracking-wider hidden md:block">
-                <i class="fab fa-github"></i> Connected
+                <i class="fab fa-github"></i> Cloud Active
             </div>
             <h1 class="text-2xl font-bold uppercase tracking-[0.2em] text-slate-900 mb-1">Daftar Piket Penjagaan Satpam</h1>
             <h2 class="text-lg font-bold uppercase text-slate-600 mb-4">BPK Perwakilan Provinsi Aceh</h2>
@@ -143,9 +140,8 @@
             </table>
         </div>
 
-        <!-- FOOTER / LEGEND & TTD -->
+        <!-- FOOTER -->
         <div class="bg-white border-t-2 border-slate-800">
-            <!-- Bagian Atas Footer (Legend & Aturan) -->
             <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-[10px] border-b border-slate-200">
                 <div class="border border-slate-200 p-3 rounded bg-slate-50">
                     <h3 class="font-bold underline mb-2 text-slate-900">KODE JADWAL:</h3>
@@ -160,61 +156,55 @@
                     <h3 class="font-bold underline mb-2 text-slate-900">CATATAN:</h3>
                     <ul class="list-disc pl-4 space-y-1">
                         <li>Pimpinan Libur Bergantian saat Tanggal Merah.</li>
-                        <li>Sinkronisasi Cloud Aktif.</li>
+                        <li>Jadwal diupdate secara real-time.</li>
                     </ul>
                 </div>
             </div>
 
-            <!-- Bagian Tanda Tangan (Signature Section) -->
+            <!-- Tanda Tangan -->
             <div class="signature-section p-8 pb-12 grid grid-cols-2 gap-8 text-[11px] text-slate-900">
-                
-                <!-- TTD Kiri -->
                 <div class="flex flex-col items-center text-center">
                     <p class="mb-1">Mengetahui,</p>
                     <p class="font-bold uppercase mb-20">Kasubbag Umum & TI</p>
                     <p class="font-bold underline uppercase tracking-wide">Wirahman Salvana</p>
                     <p class="text-[10px] text-slate-500">NIP. 199301142018011002</p>
                 </div>
-
-                <!-- TTD Kanan -->
                 <div class="flex flex-col items-center text-center">
                     <p class="mb-1">Banda Aceh, <span id="signDate">...... Januari 2026</span></p>
                     <p class="font-bold uppercase mb-20">Komandan Satpam</p>
                     <p class="font-bold underline uppercase tracking-wide">Juhadi</p>
                 </div>
-
             </div>
         </div>
     </div>
 
-    <!-- GITHUB SETTINGS MODAL -->
+    <!-- GITHUB SETTINGS MODAL (Admin Only) -->
     <div id="githubModal" class="fixed inset-0 bg-black bg-opacity-80 hidden z-50 flex items-center justify-center p-4 no-print">
         <div class="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden border border-slate-600">
             <div class="bg-slate-800 p-4 flex justify-between items-center text-white">
-                <h3 class="font-bold text-sm uppercase"><i class="fab fa-github mr-2"></i>Pengaturan GitHub Cloud</h3>
+                <h3 class="font-bold text-sm uppercase"><i class="fab fa-github mr-2"></i>Login Admin Cloud</h3>
                 <button onclick="document.getElementById('githubModal').classList.add('hidden')" class="hover:text-red-300 text-xl">&times;</button>
             </div>
             <div class="p-6 space-y-4">
                 <p class="text-xs text-slate-500 bg-slate-100 p-2 rounded">
-                    Data akan disimpan di Repository GitHub Anda (file: <code>jadwal_data.json</code>). Token disimpan aman di browser Anda.
+                    Masukkan Token GitHub untuk mengaktifkan Mode Edit.
                 </p>
                 
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">GitHub Username</label>
-                    <input type="text" id="ghUsername" placeholder="Contoh: wirahman" class="w-full border p-2 rounded text-xs">
+                    <input type="text" id="ghUsername" class="w-full border p-2 rounded text-xs">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Repository Name</label>
-                    <input type="text" id="ghRepo" placeholder="Contoh: jadwal-satpam" class="w-full border p-2 rounded text-xs">
+                    <input type="text" id="ghRepo" class="w-full border p-2 rounded text-xs">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Personal Access Token (Classic)</label>
-                    <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx" class="w-full border p-2 rounded text-xs">
-                    <p class="text-[9px] text-red-500 mt-1">*Wajib centang scope: <b>repo</b> saat buat token.</p>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Personal Access Token</label>
+                    <input type="password" id="ghToken" class="w-full border p-2 rounded text-xs">
                 </div>
 
                 <button onclick="saveGithubConfig()" class="w-full bg-slate-800 hover:bg-black text-white py-2 rounded text-xs font-bold">
-                    SIMPAN & HUBUNGKAN
+                    LOGIN ADMIN
                 </button>
             </div>
         </div>
@@ -224,14 +214,8 @@
         const year = 2026;
         const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
         const dayNamesIndo = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
-        const ADMIN_PASS = "admin123";
 
-        // --- HOLIDAYS ---
-        const holidays2026 = [
-            "2026-0-1", "2026-0-27", "2026-1-17", "2026-2-20", "2026-2-31", 
-            "2026-3-1", "2026-4-1", "2026-4-14", "2026-4-25", "2026-5-1", 
-            "2026-5-17", "2026-6-7", "2026-7-17", "2026-9-20", "2026-11-25"
-        ];
+        const holidays2026 = ["2026-0-1", "2026-0-27", "2026-1-17", "2026-2-20", "2026-2-31", "2026-3-1", "2026-4-1", "2026-4-14", "2026-4-25", "2026-5-1", "2026-5-17", "2026-6-7", "2026-7-17", "2026-9-20", "2026-11-25"];
 
         const SEQ_5 = ["K", "K", "S", "K", "B"]; 
 
@@ -240,65 +224,59 @@
         let isEditMode = false;
         let isAdmin = false;
         
-        // --- GITHUB CONFIG ---
-        let ghConfig = {
-            owner: '',
-            repo: '',
-            token: '',
-            path: 'jadwal_data.json'
-        };
+        let ghConfig = { owner: '', repo: '', token: '', path: 'jadwal_data.json' };
 
         window.onload = async function() {
-            // Load GH Config first
-            const savedGH = localStorage.getItem('gh_config_satpam');
-            if(savedGH) {
-                ghConfig = JSON.parse(savedGH);
-                // Attempt auto-sync on load
-                await syncFromGithub();
-            } else {
-                loadDataLocal(); // Fallback to local if no cloud
-            }
-
+            // Build Month Selector
             const select = document.getElementById('monthSelector');
             months.forEach((m, index) => {
                 const opt = document.createElement('option');
                 opt.value = index; opt.innerText = m; select.appendChild(opt);
             });
-            
-            if(sessionStorage.getItem('satpam_admin') === 'true') { isAdmin = true; updateAdminUI(); }
+
+            // 1. Cek Apakah Ada Data Login Admin?
+            const savedGH = localStorage.getItem('gh_config_satpam');
+            if(savedGH) {
+                ghConfig = JSON.parse(savedGH);
+                isAdmin = true;
+                updateStatus('loading', 'Login Admin...');
+                updateUIForAdmin();
+                // Admin selalu sync via API untuk memastikan bisa write
+                await syncFromGithubAPI();
+            } else {
+                // 2. Jika Tidak Ada, Masuk Mode Public (Guest)
+                isAdmin = false;
+                updateStatus('loading', 'Mengambil Data Publik...');
+                updateUIForGuest();
+                await loadPublicData();
+            }
+
             renderSchedule();
         };
 
-        // --- DATA MANAGEMENT (CLOUD FIRST) ---
-        
-        // 1. Setup GitHub
-        function showGithubModal() {
-            document.getElementById('githubModal').classList.remove('hidden');
-            document.getElementById('ghUsername').value = ghConfig.owner;
-            document.getElementById('ghRepo').value = ghConfig.repo;
-            document.getElementById('ghToken').value = ghConfig.token;
-        }
-
-        function saveGithubConfig() {
-            ghConfig.owner = document.getElementById('ghUsername').value.trim();
-            ghConfig.repo = document.getElementById('ghRepo').value.trim();
-            ghConfig.token = document.getElementById('ghToken').value.trim();
-            
-            if(!ghConfig.owner || !ghConfig.repo || !ghConfig.token) {
-                alert("Semua data wajib diisi!");
-                return;
+        // --- PUBLIC VIEW LOGIC (NO TOKEN) ---
+        async function loadPublicData() {
+            try {
+                // Fetch file JSON dari folder yang sama (Relative Path)
+                // Tambah timestamp agar tidak dicache browser
+                const response = await fetch('jadwal_data.json?t=' + new Date().getTime());
+                
+                if (!response.ok) throw new Error("Data belum tersedia di Cloud.");
+                
+                staffData = await response.json();
+                updateStatus('public', 'Mode Publik (Read Only)');
+                renderSchedule();
+                
+            } catch (e) {
+                console.warn("Gagal load public data, fallback ke local storage atau default.");
+                loadDataLocal();
+                updateStatus('idle', 'Offline / Local Data');
             }
-
-            localStorage.setItem('gh_config_satpam', JSON.stringify(ghConfig));
-            document.getElementById('githubModal').classList.add('hidden');
-            
-            syncFromGithub(true);
         }
 
-        // 2. Pull Data (Download)
-        async function syncFromGithub(isInit = false) {
-            updateStatus('loading', 'Syncing...');
-            
+        // --- ADMIN LOGIC (WITH TOKEN) ---
+        async function syncFromGithubAPI(isInit = false) {
+            updateStatus('loading', 'Syncing API...');
             try {
                 const url = `https://api.github.com/repos/${ghConfig.owner}/${ghConfig.repo}/contents/${ghConfig.path}`;
                 const response = await fetch(url, {
@@ -310,63 +288,49 @@
                 });
 
                 if (response.status === 404) {
-                    if (isInit) {
-                        await pushToGithub();
-                    } else {
-                        updateStatus('error', 'File not found');
-                    }
+                    if (isInit) await pushToGithub();
                     return;
                 }
-
                 if (!response.ok) throw new Error('Github Error');
 
                 const data = await response.json();
                 const content = decodeURIComponent(escape(atob(data.content)));
                 staffData = JSON.parse(content);
-                
-                // Update Local Storage as backup
-                localStorage.setItem('satpamData2026_v5', JSON.stringify(staffData));
-                
                 renderSchedule();
-                updateStatus('success', 'Cloud Connected');
+                updateStatus('success', 'Admin Connected');
 
             } catch (error) {
                 console.error(error);
                 updateStatus('error', 'Sync Failed');
-                loadDataLocal();
             }
         }
 
-        // 3. Push Data (Upload)
         async function pushToGithub() {
             updateStatus('loading', 'Uploading...');
-            
             try {
-                // 1. Get current SHA
                 const url = `https://api.github.com/repos/${ghConfig.owner}/${ghConfig.repo}/contents/${ghConfig.path}`;
                 let sha = null;
 
+                // Get SHA
                 const getRes = await fetch(url, {
                     headers: { 'Authorization': `token ${ghConfig.token}` },
                     cache: "no-store"
                 });
-
                 if (getRes.ok) {
                     const getData = await getRes.json();
                     sha = getData.sha;
                 }
 
-                // 2. Prepare Payload
+                // Upload
                 const contentStr = JSON.stringify(staffData, null, 2);
                 const contentBase64 = btoa(unescape(encodeURIComponent(contentStr)));
 
                 const body = {
-                    message: "Update Jadwal Satpam via Web App",
+                    message: "Update Jadwal",
                     content: contentBase64,
                     sha: sha 
                 };
 
-                // 3. PUT Request
                 const putRes = await fetch(url, {
                     method: 'PUT',
                     headers: {
@@ -377,24 +341,62 @@
                 });
 
                 if (!putRes.ok) throw new Error('Upload Failed');
-
                 updateStatus('success', 'Data Saved to Cloud');
                 
             } catch (error) {
                 console.error(error);
                 updateStatus('error', 'Upload Error');
-                alert("Gagal Upload ke GitHub. Cek Token/Koneksi.");
+                alert("Gagal Upload. Cek Token.");
             }
         }
 
-        function forcePushToGithub() {
-            if(confirm("Timpa data di Cloud dengan data Lokal saat ini?")) {
-                pushToGithub();
+        // --- UI HELPERS ---
+        function updateUIForAdmin() {
+            document.getElementById('btnSetupCloud').classList.add('hidden'); // Sembunyikan tombol login
+            document.getElementById('btnEdit').classList.remove('hidden'); // Munculkan tombol edit
+            document.getElementById('adminPanel').classList.remove('hidden'); // Munculkan panel
+        }
+
+        function updateUIForGuest() {
+            document.getElementById('btnSetupCloud').classList.remove('hidden'); // Munculkan tombol login (siapa tau admin mau login)
+            document.getElementById('btnEdit').classList.add('hidden'); // Sembunyikan edit
+            document.getElementById('adminPanel').classList.add('hidden'); // Sembunyikan panel
+        }
+
+        function showGithubModal() {
+            document.getElementById('githubModal').classList.remove('hidden');
+            if(ghConfig.owner) {
+                document.getElementById('ghUsername').value = ghConfig.owner;
+                document.getElementById('ghRepo').value = ghConfig.repo;
             }
         }
 
-        function manualPull() {
-             syncFromGithub();
+        function saveGithubConfig() {
+            ghConfig.owner = document.getElementById('ghUsername').value.trim();
+            ghConfig.repo = document.getElementById('ghRepo').value.trim();
+            ghConfig.token = document.getElementById('ghToken').value.trim();
+            
+            if(!ghConfig.token) return alert("Token Wajib Diisi!");
+
+            localStorage.setItem('gh_config_satpam', JSON.stringify(ghConfig));
+            document.getElementById('githubModal').classList.add('hidden');
+            
+            // Switch to Admin Mode
+            isAdmin = true;
+            updateUIForAdmin();
+            syncFromGithubAPI(true);
+        }
+
+        function logoutAdmin() {
+            if(confirm("Logout Admin? Token akan dihapus dari browser ini.")) {
+                localStorage.removeItem('gh_config_satpam');
+                location.reload();
+            }
+        }
+
+        function reloadData() {
+            if(isAdmin) syncFromGithubAPI();
+            else loadPublicData();
         }
 
         function updateStatus(type, msg) {
@@ -403,13 +405,12 @@
             el.innerHTML = `<i class="fas fa-circle text-[6px] mr-1"></i> ${msg}`;
         }
 
-        // --- LOCAL DATA FALLBACK ---
+        // --- STANDARD LOGIC (RENDER, CALC, ETC) ---
         function loadDataLocal() {
             const stored = localStorage.getItem('satpamData2026_v5');
-            if (stored) {
-                staffData = JSON.parse(stored);
-            } else {
-                staffData = [
+            if (stored) staffData = JSON.parse(stored);
+            else {
+                 staffData = [
                     { id: "pimpinan", teamName: "I. PIMPINAN (OPERASIONAL)", isShift: false, members: [
                         { name: "NASRULLAH", role: "KOMANDAN", offset: 0, dayOffset: 0 },
                         { name: "NAMA WAKIL", role: "WAKIL KOMANDAN", offset: 0, dayOffset: 0 } 
@@ -438,39 +439,12 @@
                 ];
             }
         }
-
-        function saveData() {
-            localStorage.setItem('satpamData2026_v5', JSON.stringify(staffData));
-        }
-
-        function resetData() { if(confirm("Reset Data Lokal?")) { localStorage.removeItem('satpamData2026_v5'); location.reload(); }}
-
-        // --- AUTH ---
-        function loginAdmin() {
-            const pass = prompt("Password Admin:");
-            if (pass === ADMIN_PASS) { isAdmin = true; sessionStorage.setItem('satpam_admin', 'true'); updateAdminUI(); alert("Admin Mode Aktif"); }
-        }
-        function updateAdminUI() {
-            document.getElementById('adminPanel').classList.toggle('hidden', !isAdmin);
-            document.getElementById('btnLogin').classList.add('hidden');
-        }
-
-        // --- LOGIC HELPERS ---
-        function getDayOfYear(d) {
-            const start = new Date(year, 0, 1);
-            return Math.floor((d - start) / (1000 * 60 * 60 * 24));
-        }
-
-        function isHoliday(year, month, day) {
-            const key = `${year}-${month}-${day}`;
-            return holidays2026.includes(key);
-        }
-
-        function getHolidayIndex(year, month, day) {
-            const key = `${year}-${month}-${day}`;
-            return holidays2026.indexOf(key);
-        }
-
+        function saveData() { localStorage.setItem('satpamData2026_v5', JSON.stringify(staffData)); }
+        function forcePushToGithub() { if(confirm("Timpa Cloud?")) pushToGithub(); }
+        function getDayOfYear(d) { const start = new Date(year, 0, 1); return Math.floor((d - start) / (1000 * 60 * 60 * 24)); }
+        function isHoliday(y, m, d) { return holidays2026.includes(`${y}-${m}-${d}`); }
+        function getHolidayIndex(y, m, d) { return holidays2026.indexOf(`${y}-${m}-${d}`); }
+        
         function getShiftFromSequence(dateObj, dayOfYear, group, member, reguSize) {
             if (group.id === "pimpinan") {
                 const isHol = isHoliday(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
@@ -504,7 +478,6 @@
             return { code: prefix + loc, cls: cls + " border-slate-200" };
         }
 
-        // --- RENDER ENGINE ---
         function renderSchedule() {
             currentMonth = parseInt(document.getElementById('monthSelector').value);
             const totalDays = new Date(year, currentMonth + 1, 0).getDate();
@@ -513,8 +486,6 @@
             const tbody = document.getElementById('scheduleBody');
             
             document.getElementById('periodLabel').innerText = `${months[currentMonth]} ${year}`;
-            
-            // UPDATE TANGGAL DI TANDA TANGAN
             document.getElementById('signDate').innerText = `...... ${months[currentMonth]} ${year}`;
 
             while (tableHeadRow.children.length > 3) tableHeadRow.removeChild(tableHeadRow.lastChild);
@@ -547,7 +518,7 @@
                     let controls = "";
                     if(isEditMode && isAdmin) {
                         nameDisplay = `<input type="text" value="${member.name}" onchange="staffData[${groupIdx}].members[${memberIdx}].name=this.value.toUpperCase();saveData()" class="editable-input uppercase">`;
-                        controls = `<div class="mt-1"><button onclick="if(confirm('Hapus?')){staffData[${groupIdx}].members.splice(${memberIdx},1);saveData();renderSchedule();}" class="text-red-500 text-[8px]"><i class="fas fa-trash"></i> Hapus</button></div>`;
+                        controls = `<div class="mt-1"><button onclick="if(confirm('Hapus?')){staffData[${groupIdx}].members.splice(${memberIdx},1);saveData();if(ghConfig.token) pushToGithub();renderSchedule();}" class="text-red-500 text-[8px]"><i class="fas fa-trash"></i> Hapus</button></div>`;
                     }
                     tr.innerHTML = `<td class="text-center text-[10px] text-slate-400 font-bold">${memberIdx + 1}</td><td class="p-1 px-3 border-r sticky-col left-0 bg-white text-[9px] font-bold text-slate-500 uppercase">${member.role}</td><td class="p-1 px-3 border-r sticky-col left-[128px] bg-white shadow-md font-bold text-slate-800 whitespace-nowrap">${nameDisplay}${controls}</td>`;
 
@@ -598,18 +569,14 @@
                     }
                 }
             }
+            if(ghConfig.token) pushToGithub();
             return false;
         }
 
         function toggleEditMode() { 
             isEditMode = !isEditMode; 
             document.getElementById('btnEditText').innerText = isEditMode ? "Simpan & Upload" : "Edit Manual"; 
-            
-            // Auto Push on Save (Exit Edit Mode)
-            if(!isEditMode && ghConfig.token) {
-                pushToGithub();
-            }
-            
+            if(!isEditMode && ghConfig.token) pushToGithub();
             renderSchedule(); 
         }
         
@@ -619,7 +586,6 @@
             const role = document.getElementById('newMemberRole').value;
             staffData[rIdx].members.push({ name: name, role: role, offset: 0, dayOffset: 0 });
             saveData(); 
-            // Trigger push if online
             if(ghConfig.token) pushToGithub();
             renderSchedule(); 
             document.getElementById('newMemberName').value = "";
