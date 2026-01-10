@@ -1,0 +1,132 @@
+[
+  {
+    "id": "pimpinan",
+    "teamName": "I. PIMPINAN (OPERASIONAL)",
+    "isShift": false,
+    "members": [
+      {
+        "name": "NASRULLAH",
+        "role": "KOMANDAN",
+        "offset": 0,
+        "dayOffset": 0
+      },
+      {
+        "name": "NAMA WAKIL",
+        "role": "WAKIL KOMANDAN",
+        "offset": 0,
+        "dayOffset": 0
+      }
+    ]
+  },
+  {
+    "id": "regu1",
+    "teamName": "II. REGU I (5 PERSONIL)",
+    "baseOffset": 0,
+    "members": [
+      {
+        "name": "JUHADI",
+        "role": "DANRU",
+        "offset": 0,
+        "dayOffset": 0
+      },
+      {
+        "name": "YUNUS PINEM",
+        "role": "Anggota",
+        "offset": 1,
+        "dayOffset": 0
+      },
+      {
+        "name": "MUNAWIR",
+        "role": "Anggota",
+        "offset": 2,
+        "dayOffset": 0
+      },
+      {
+        "name": "ZULFIADI",
+        "role": "Anggota",
+        "offset": 3,
+        "dayOffset": 0
+      },
+      {
+        "name": "HANAFI",
+        "role": "Anggota",
+        "offset": 4,
+        "dayOffset": 0
+      }
+    ]
+  },
+  {
+    "id": "regu2",
+    "teamName": "III. REGU II (5 PERSONIL)",
+    "baseOffset": 1,
+    "members": [
+      {
+        "name": "AGUS FADLI",
+        "role": "DANRU",
+        "offset": 0,
+        "dayOffset": 0
+      },
+      {
+        "name": "TARMIZI",
+        "role": "Anggota",
+        "offset": 1,
+        "dayOffset": 0
+      },
+      {
+        "name": "M. ARIF R",
+        "role": "Anggota",
+        "offset": 2,
+        "dayOffset": 0
+      },
+      {
+        "name": "ARIF PRAWIRA",
+        "role": "Anggota",
+        "offset": 3,
+        "dayOffset": 0
+      },
+      {
+        "name": "GHIOVANNY",
+        "role": "Anggota",
+        "offset": 4,
+        "dayOffset": 0
+      }
+    ]
+  },
+  {
+    "id": "regu3",
+    "teamName": "IV. REGU III (5 PERSONIL)",
+    "baseOffset": 2,
+    "members": [
+      {
+        "name": "MAWARDI",
+        "role": "DANRU",
+        "offset": 0,
+        "dayOffset": 0
+      },
+      {
+        "name": "ZULFIKAR",
+        "role": "Anggota",
+        "offset": 1,
+        "dayOffset": 0
+      },
+      {
+        "name": "ARISETARA",
+        "role": "Anggota",
+        "offset": 2,
+        "dayOffset": 0
+      },
+      {
+        "name": "ARIFFIANSYAH",
+        "role": "Anggota",
+        "offset": 3,
+        "dayOffset": 0
+      },
+      {
+        "name": "AMIRJAN",
+        "role": "Anggota",
+        "offset": 4,
+        "dayOffset": 0
+      }
+    ]
+  }
+]
