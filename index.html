@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jadwal Satpam 2026</title>
+    <title>Jadwal Satpam 2026 - v5.8 One Page A3</title>
     <!-- Framework & Library -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -23,44 +23,52 @@
             .sticky-col { position: sticky; z-index: 10; border-right: 2px solid #cbd5e1 !important; }
         }
 
-        /* --- PDF MODE (CRITICAL FIXES) --- */
-        /* 1. Paksa Container melebar mengikuti isi tabel (Fix Border Terpotong) */
-        .pdf-mode .print-container { 
-            max-width: none !important; 
-            width: fit-content !important; 
-            min-width: 100% !important;
-            box-shadow: none !important;
-            border: none !important;
-        }
-
-        /* 2. Style Tabel PDF */
-        .pdf-mode .schedule-table { 
-            width: 100% !important; 
-            table-layout: auto !important; /* Biarkan tabel bernapas */
-        }
+        /* --- PDF MODE (CRITICAL FIXES FOR 1 PAGE) --- */
         
-        /* 3. Font & Border Crisp */
+        /* 1. Container Fit */
+        .pdf-mode .print-container { 
+            max-width: none !important; width: fit-content !important; min-width: 100% !important;
+            box-shadow: none !important; border: none !important;
+            border-radius: 0 !important;
+        }
+
+        /* 2. Kompresi Tabel & Font (8.5pt Optimal untuk A3) */
+        .pdf-mode .schedule-table { width: 100% !important; table-layout: auto !important; }
         .pdf-mode th, .pdf-mode td { 
-            font-size: 9pt !important; 
-            padding: 4px 3px !important; 
+            font-size: 8.5pt !important; 
+            padding: 1.5px 2px !important; /* Padding TIPIS agar baris tidak tinggi */
             white-space: nowrap; 
-            border: 1px solid #000 !important; 
+            border: 0.5px solid #000 !important; 
+            line-height: 1.1 !important;
         }
 
-        /* 4. Header Biru tetap tercetak */
-        .pdf-mode thead tr:first-child { 
-            background-color: #2563eb !important; 
-            color: white !important; 
-            -webkit-print-color-adjust: exact; 
-        }
+        /* 3. Kompresi Header & Judul (Buang Spasi Berlebih) */
+        .pdf-mode .header-section { padding: 5px 10px !important; border-bottom: 2px solid #000 !important; }
+        .pdf-mode h1 { font-size: 14pt !important; margin-bottom: 2px !important; letter-spacing: 0.1em !important; }
+        .pdf-mode h2 { font-size: 10pt !important; margin-bottom: 4px !important; }
+        .pdf-mode .period-box { padding: 2px 20px !important; margin-top: 2px !important; }
+        .pdf-mode .period-text { font-size: 9pt !important; }
 
-        /* 5. Matikan Scroll & Sticky */
-        .pdf-mode .sticky-col { position: static !important; border: 1px solid #000 !important; } 
+        /* 4. Kompresi Footer & Tanda Tangan */
+        .pdf-mode .footer-section { padding: 5px 10px !important; border-top: 2px solid #000 !important; }
+        .pdf-mode .legend-box { padding: 4px !important; }
+        .pdf-mode .signature-section { 
+            padding: 5px 0 0 0 !important; 
+            page-break-inside: avoid !important; 
+        }
+        /* Mengurangi jarak tempat tanda tangan (mb-16 -> mb-6) agar muat */
+        .pdf-mode .sig-space { margin-bottom: 25px !important; } 
+        .pdf-mode .sig-text { font-size: 9pt !important; }
+
+        /* 5. Warna Header Biru Tetap */
+        .pdf-mode thead tr:first-child { background-color: #2563eb !important; color: white !important; -webkit-print-color-adjust: exact; }
+        .pdf-mode thead tr:nth-child(2) th { background-color: #eff6ff !important; -webkit-print-color-adjust: exact; }
+
+        /* 6. Matikan Elemen Web */
+        .pdf-mode .sticky-col { position: static !important; border: 0.5px solid #000 !important; } 
         .pdf-mode #tableContainer { overflow: visible !important; } 
         .pdf-mode .no-print-pdf { display: none !important; }
 
-        /* 6. TTD tidak terpotong */
-        .pdf-mode .signature-section { page-break-inside: avoid !important; break-inside: avoid !important; }
 
         /* UI Normal Styles */
         .editable-input { width: 100%; background: #fff; border: 1px solid #94a3b8; padding: 2px 4px; font-weight: bold; border-radius: 4px; font-size: 11px; }
@@ -115,7 +123,7 @@
                 </button>
                 <!-- Tombol PDF -->
                 <button onclick="downloadPDF()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded shadow text-xs font-bold transition-all flex items-center gap-2">
-                    <i class="fas fa-file-pdf"></i> <span>Download PDF (A3 Full Border)</span>
+                    <i class="fas fa-file-pdf"></i> <span>Download PDF (A3 Pas 1 Lembar)</span>
                 </button>
             </div>
         </div>
@@ -151,16 +159,18 @@
     </div>
 
     <!-- MAIN SCHEDULE -->
-    <!-- Container utama. Saat PDF mode, max-width akan dilepas (none) -->
+    <!-- Tambahkan 'page-break-inside: avoid' untuk menjaga kesatuan -->
     <div id="contentToPrint" class="print-container max-w-[1400px] mx-auto bg-white shadow-xl border border-slate-300 rounded-lg overflow-hidden" style="page-break-inside: avoid;">
-        <div class="p-6 border-b-2 border-slate-800 text-center bg-white relative">
+        
+        <!-- HEADER SECTION -->
+        <div class="header-section p-6 border-b-2 border-slate-800 text-center bg-white relative">
             <div class="absolute top-2 right-2 border border-blue-200 bg-blue-50 text-blue-700 px-2 py-1 rounded text-[8px] font-bold uppercase tracking-wider hidden md:block no-print-pdf">
                 <i class="fab fa-github"></i> Cloud Active
             </div>
             <h1 class="text-3xl font-bold uppercase tracking-[0.2em] text-slate-900 mb-2">Daftar Piket Penjagaan Satpam</h1>
             <h2 class="text-xl font-bold uppercase text-slate-600 mb-6">BPK Perwakilan Provinsi Aceh</h2>
-            <div class="inline-block border-y-2 border-slate-300 px-12 py-2 bg-slate-50">
-                <p class="text-sm font-bold uppercase text-slate-700">Periode: <span id="periodLabel" class="text-slate-900">Januari 2026</span></p>
+            <div class="period-box inline-block border-y-2 border-slate-300 px-12 py-2 bg-slate-50">
+                <p class="period-text text-sm font-bold uppercase text-slate-700">Periode: <span id="periodLabel" class="text-slate-900">Januari 2026</span></p>
             </div>
         </div>
 
@@ -182,10 +192,10 @@
             </table>
         </div>
 
-        <!-- FOOTER -->
-        <div class="bg-white border-t-2 border-slate-800">
+        <!-- FOOTER SECTION -->
+        <div class="footer-section bg-white border-t-2 border-slate-800">
             <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-[10px] border-b border-slate-200">
-                <div class="border border-slate-200 p-2 rounded bg-slate-50">
+                <div class="legend-box border border-slate-200 p-2 rounded bg-slate-50">
                     <h3 class="font-bold underline mb-2 text-slate-900">KODE JADWAL:</h3>
                     <div class="grid grid-cols-4 gap-2">
                         <div><span class="inline-block w-2 h-2 bg-orange-500 rounded-full mr-1"></span><b>K:</b> Kantor</div>
@@ -194,7 +204,7 @@
                         <div class="text-red-600"><span class="inline-block w-2 h-2 bg-red-500 rounded-full mr-1"></span><b>L:</b> Libur</div>
                     </div>
                 </div>
-                <div class="border border-slate-200 p-2 rounded bg-slate-50">
+                <div class="legend-box border border-slate-200 p-2 rounded bg-slate-50">
                     <h3 class="font-bold underline mb-2 text-slate-900">CATATAN:</h3>
                     <ul class="list-disc pl-4 space-y-1">
                         <li>Pimpinan Libur Bergantian saat Tanggal Merah.</li>
@@ -204,18 +214,18 @@
                 </div>
             </div>
 
-            <!-- Tanda Tangan -->
+            <!-- Tanda Tangan: Menggunakan class 'sig-space' untuk mengatur tinggi saat PDF -->
             <div class="signature-section p-6 pb-8 grid grid-cols-2 gap-8 text-[11px] text-slate-900" style="page-break-inside: avoid;">
                 <div class="flex flex-col items-center text-center">
-                    <p class="mb-1">Mengetahui,</p>
-                    <p class="font-bold uppercase mb-16">Kasubbag Umum & TI</p>
-                    <p class="font-bold underline uppercase tracking-wide">Wirahman Salvana</p>
-                    <p class="text-[10px] text-slate-500">NIP. 199301142018011002</p>
+                    <p class="sig-text mb-1">Mengetahui,</p>
+                    <p class="sig-text font-bold uppercase mb-16 sig-space">Kasubbag Umum & TI</p>
+                    <p class="sig-text font-bold underline uppercase tracking-wide">Wirahman Salvana</p>
+                    <p class="sig-text text-[10px] text-slate-500">NIP. 199301142018011002</p>
                 </div>
                 <div class="flex flex-col items-center text-center">
-                    <p class="mb-1">Banda Aceh, <span id="signDate">...... Januari 2026</span></p>
-                    <p class="font-bold uppercase mb-16">Komandan Satpam</p>
-                    <p class="font-bold underline uppercase tracking-wide">Juhadi</p>
+                    <p class="sig-text mb-1">Banda Aceh, <span id="signDate">...... Januari 2026</span></p>
+                    <p class="sig-text font-bold uppercase mb-16 sig-space">Komandan Satpam</p>
+                    <p class="sig-text font-bold underline uppercase tracking-wide">Juhadi</p>
                 </div>
             </div>
         </div>
