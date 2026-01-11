@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jadwal Satpam 2026</title>
+    <title>Jadwal Satpam 2026 </title>
     <!-- Framework & Library -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -17,7 +17,23 @@
         .custom-scroll::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
         .schedule-table th, .schedule-table td { border: 1px solid #cbd5e1; }
         
-        .sticky-col { position: sticky; z-index: 10; border-right: 2px solid #cbd5e1 !important; }
+        /* FIX MOBILE: Sticky non-aktif di HP */
+        .sticky-col { position: relative; z-index: 1; border-right: 1px solid #cbd5e1; }
+        @media (min-width: 768px) {
+            .sticky-col { position: sticky; z-index: 10; border-right: 2px solid #cbd5e1 !important; }
+        }
+
+        /* --- PDF MODE (Critical Fix) --- */
+        .pdf-mode .schedule-table { width: 100% !important; table-layout: fixed; }
+        .pdf-mode th, .pdf-mode td { 
+            font-size: 6px !important; 
+            padding: 1px 2px !important; 
+            white-space: nowrap; 
+        }
+        .pdf-mode .sticky-col { position: static !important; border: 1px solid #999 !important; } 
+        .pdf-mode #tableContainer { overflow: visible !important; } 
+        .pdf-mode .no-print-pdf { display: none !important; }
+
         .editable-input { width: 100%; background: #fff; border: 1px solid #94a3b8; padding: 2px 4px; font-weight: bold; border-radius: 4px; font-size: 11px; }
         .cell-selector { background: transparent; font-size: 9px; font-weight: bold; width: 100%; height: 100%; cursor: pointer; border: none; text-align: center; appearance: none; -webkit-appearance: none; }
         .holiday-date { background-color: #fee2e2 !important; color: #b91c1c !important; }
@@ -31,13 +47,9 @@
         .status-public { background: #dbeafe; color: #1e40af; }
 
         @media print {
-            @page { size: A4 landscape; margin: 5mm; }
+            @page { size: Legal landscape; margin: 5mm; }
             body { background: white; -webkit-print-color-adjust: exact; }
             .no-print { display: none !important; }
-            .print-container { width: 100% !important; max-width: none !important; overflow: visible !important; box-shadow: none !important; border: none !important; }
-            table { font-size: 7pt; width: 100%; border-collapse: collapse; }
-            th, td { padding: 1px !important; border: 1px solid #000 !important; }
-            .signature-section { page-break-inside: avoid; }
         }
     </style>
 </head>
@@ -56,7 +68,6 @@
                         </select>
                         <span class="text-xl font-bold text-slate-700">2026</span>
                     </div>
-                    <!-- Status Sync -->
                     <div id="syncStatus" class="sync-status status-idle inline-block mt-1">
                         <i class="fas fa-circle text-[6px] mr-1"></i> Memuat Data...
                     </div>
@@ -74,12 +85,12 @@
                     <i class="fas fa-edit"></i> <span id="btnEditText">Edit Manual</span>
                 </button>
                 <button onclick="downloadPDF()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded shadow text-xs font-bold transition-all flex items-center gap-2">
-                    <i class="fas fa-file-pdf"></i> <span>PDF</span>
+                    <i class="fas fa-file-pdf"></i> <span>Download PDF (Full)</span>
                 </button>
             </div>
         </div>
 
-        <!-- ADMIN PANEL (Hidden for Public) -->
+        <!-- ADMIN PANEL -->
         <div id="adminPanel" class="hidden bg-slate-50 p-4 rounded-lg border border-slate-200 border-l-4 border-l-slate-500 transition-all duration-300">
             <div class="flex justify-between items-center mb-2">
                 <h3 class="text-xs font-bold text-slate-900 uppercase"><i class="fas fa-user-cog mr-2"></i>Manajemen Personil (Admin Mode)</h3>
@@ -112,7 +123,7 @@
     <!-- MAIN SCHEDULE -->
     <div id="contentToPrint" class="print-container max-w-[1400px] mx-auto bg-white shadow-xl border border-slate-300 rounded-lg overflow-hidden">
         <div class="p-6 border-b-2 border-slate-800 text-center bg-white relative">
-            <div class="absolute top-2 right-2 border border-blue-200 bg-blue-50 text-blue-700 px-2 py-1 rounded text-[8px] font-bold uppercase tracking-wider hidden md:block">
+            <div class="absolute top-2 right-2 border border-blue-200 bg-blue-50 text-blue-700 px-2 py-1 rounded text-[8px] font-bold uppercase tracking-wider hidden md:block no-print-pdf">
                 <i class="fab fa-github"></i> Cloud Active
             </div>
             <h1 class="text-2xl font-bold uppercase tracking-[0.2em] text-slate-900 mb-1">Daftar Piket Penjagaan Satpam</h1>
@@ -157,6 +168,7 @@
                     <ul class="list-disc pl-4 space-y-1">
                         <li>Pimpinan Libur Bergantian saat Tanggal Merah.</li>
                         <li>Jadwal diupdate secara real-time.</li>
+                        <li><b>Data Libur:</b> Estimasi kalender nasional & hijriyah.</li>
                     </ul>
                 </div>
             </div>
@@ -241,7 +253,6 @@
                 isAdmin = true;
                 updateStatus('loading', 'Login Admin...');
                 updateUIForAdmin();
-                // Admin selalu sync via API untuk memastikan bisa write
                 await syncFromGithubAPI();
             } else {
                 // 2. Jika Tidak Ada, Masuk Mode Public (Guest)
@@ -254,19 +265,14 @@
             renderSchedule();
         };
 
-        // --- PUBLIC VIEW LOGIC (NO TOKEN) ---
+        // --- PUBLIC VIEW LOGIC ---
         async function loadPublicData() {
             try {
-                // Fetch file JSON dari folder yang sama (Relative Path)
-                // Tambah timestamp agar tidak dicache browser
                 const response = await fetch('jadwal_data.json?t=' + new Date().getTime());
-                
                 if (!response.ok) throw new Error("Data belum tersedia di Cloud.");
-                
                 staffData = await response.json();
                 updateStatus('public', 'Mode Publik (Read Only)');
                 renderSchedule();
-                
             } catch (e) {
                 console.warn("Gagal load public data, fallback ke local storage atau default.");
                 loadDataLocal();
@@ -274,7 +280,7 @@
             }
         }
 
-        // --- ADMIN LOGIC (WITH TOKEN) ---
+        // --- ADMIN LOGIC ---
         async function syncFromGithubAPI(isInit = false) {
             updateStatus('loading', 'Syncing API...');
             try {
@@ -302,6 +308,7 @@
             } catch (error) {
                 console.error(error);
                 updateStatus('error', 'Sync Failed');
+                loadDataLocal();
             }
         }
 
@@ -311,7 +318,6 @@
                 const url = `https://api.github.com/repos/${ghConfig.owner}/${ghConfig.repo}/contents/${ghConfig.path}`;
                 let sha = null;
 
-                // Get SHA
                 const getRes = await fetch(url, {
                     headers: { 'Authorization': `token ${ghConfig.token}` },
                     cache: "no-store"
@@ -321,7 +327,6 @@
                     sha = getData.sha;
                 }
 
-                // Upload
                 const contentStr = JSON.stringify(staffData, null, 2);
                 const contentBase64 = btoa(unescape(encodeURIComponent(contentStr)));
 
@@ -350,47 +355,9 @@
             }
         }
 
-        // --- UI HELPERS ---
-        function updateUIForAdmin() {
-            document.getElementById('btnSetupCloud').classList.add('hidden'); // Sembunyikan tombol login
-            document.getElementById('btnEdit').classList.remove('hidden'); // Munculkan tombol edit
-            document.getElementById('adminPanel').classList.remove('hidden'); // Munculkan panel
-        }
-
-        function updateUIForGuest() {
-            document.getElementById('btnSetupCloud').classList.remove('hidden'); // Munculkan tombol login (siapa tau admin mau login)
-            document.getElementById('btnEdit').classList.add('hidden'); // Sembunyikan edit
-            document.getElementById('adminPanel').classList.add('hidden'); // Sembunyikan panel
-        }
-
-        function showGithubModal() {
-            document.getElementById('githubModal').classList.remove('hidden');
-            if(ghConfig.owner) {
-                document.getElementById('ghUsername').value = ghConfig.owner;
-                document.getElementById('ghRepo').value = ghConfig.repo;
-            }
-        }
-
-        function saveGithubConfig() {
-            ghConfig.owner = document.getElementById('ghUsername').value.trim();
-            ghConfig.repo = document.getElementById('ghRepo').value.trim();
-            ghConfig.token = document.getElementById('ghToken').value.trim();
-            
-            if(!ghConfig.token) return alert("Token Wajib Diisi!");
-
-            localStorage.setItem('gh_config_satpam', JSON.stringify(ghConfig));
-            document.getElementById('githubModal').classList.add('hidden');
-            
-            // Switch to Admin Mode
-            isAdmin = true;
-            updateUIForAdmin();
-            syncFromGithubAPI(true);
-        }
-
-        function logoutAdmin() {
-            if(confirm("Logout Admin? Token akan dihapus dari browser ini.")) {
-                localStorage.removeItem('gh_config_satpam');
-                location.reload();
+        function forcePushToGithub() {
+            if(confirm("Timpa data di Cloud dengan data Lokal saat ini?")) {
+                pushToGithub();
             }
         }
 
@@ -399,13 +366,7 @@
             else loadPublicData();
         }
 
-        function updateStatus(type, msg) {
-            const el = document.getElementById('syncStatus');
-            el.className = `sync-status status-${type} inline-block mt-1`;
-            el.innerHTML = `<i class="fas fa-circle text-[6px] mr-1"></i> ${msg}`;
-        }
-
-        // --- STANDARD LOGIC (RENDER, CALC, ETC) ---
+        // --- LOCAL DATA & RENDER ---
         function loadDataLocal() {
             const stored = localStorage.getItem('satpamData2026_v5');
             if (stored) staffData = JSON.parse(stored);
@@ -439,44 +400,8 @@
                 ];
             }
         }
+
         function saveData() { localStorage.setItem('satpamData2026_v5', JSON.stringify(staffData)); }
-        function forcePushToGithub() { if(confirm("Timpa Cloud?")) pushToGithub(); }
-        function getDayOfYear(d) { const start = new Date(year, 0, 1); return Math.floor((d - start) / (1000 * 60 * 60 * 24)); }
-        function isHoliday(y, m, d) { return holidays2026.includes(`${y}-${m}-${d}`); }
-        function getHolidayIndex(y, m, d) { return holidays2026.indexOf(`${y}-${m}-${d}`); }
-        
-        function getShiftFromSequence(dateObj, dayOfYear, group, member, reguSize) {
-            if (group.id === "pimpinan") {
-                const isHol = isHoliday(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
-                if (isHol) {
-                    const holIdx = getHolidayIndex(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
-                    const isGenap = (holIdx % 2 === 0);
-                    if (member.role.includes("KOMANDAN") && !member.role.includes("WAKIL")) {
-                        return (isGenap) ? { code: "L", cls: "bg-red-100 text-red-700 font-bold border-red-300" } : { code: "PK", cls: "bg-orange-100 text-orange-800 font-bold border-orange-300" };
-                    } else if (member.role.includes("WAKIL")) {
-                        return (isGenap) ? { code: "PK", cls: "bg-orange-100 text-orange-800 font-bold border-orange-300" } : { code: "L", cls: "bg-red-100 text-red-700 font-bold border-red-300" };
-                    }
-                }
-                const day = dateObj.getDay();
-                if (day === 0 || day === 6) return { code: "L", cls: "bg-red-100 text-red-700" };
-                return { code: "PK", cls: "bg-orange-100 text-orange-800" };
-            }
-
-            const dayInCycle = (dayOfYear + group.baseOffset + (member.dayOffset || 0)) % 3;
-            const cycleIndex = Math.floor((dayOfYear + group.baseOffset + (member.dayOffset || 0)) / 3);
-            if (dayInCycle === 2) return { code: "L", cls: "bg-red-100 text-red-700 border-slate-200" };
-
-            const seq = SEQ_5; 
-            const pos = (member.offset + cycleIndex) % seq.length;
-            const loc = seq[pos];
-            const prefix = (dayInCycle === 0) ? "P" : "M";
-            let cls = "";
-            if (loc === "K") cls = (dayInCycle === 0) ? "bg-orange-100 text-orange-800" : "bg-orange-50 text-orange-700";
-            else if (loc === "B") cls = (dayInCycle === 0) ? "bg-emerald-100 text-emerald-800" : "bg-emerald-50 text-emerald-700";
-            else cls = (dayInCycle === 0) ? "bg-indigo-100 text-indigo-800" : "bg-indigo-50 text-indigo-700";
-
-            return { code: prefix + loc, cls: cls + " border-slate-200" };
-        }
 
         function renderSchedule() {
             currentMonth = parseInt(document.getElementById('monthSelector').value);
@@ -548,6 +473,44 @@
             });
         }
 
+        // --- UTILS & HELPERS ---
+        function getDayOfYear(d) { const start = new Date(year, 0, 1); return Math.floor((d - start) / (1000 * 60 * 60 * 24)); }
+        function isHoliday(y, m, d) { return holidays2026.includes(`${y}-${m}-${d}`); }
+        function getHolidayIndex(y, m, d) { return holidays2026.indexOf(`${y}-${m}-${d}`); }
+        
+        function getShiftFromSequence(dateObj, dayOfYear, group, member, reguSize) {
+            if (group.id === "pimpinan") {
+                const isHol = isHoliday(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+                if (isHol) {
+                    const holIdx = getHolidayIndex(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+                    const isGenap = (holIdx % 2 === 0);
+                    if (member.role.includes("KOMANDAN") && !member.role.includes("WAKIL")) {
+                        return (isGenap) ? { code: "L", cls: "bg-red-100 text-red-700 font-bold border-red-300" } : { code: "PK", cls: "bg-orange-100 text-orange-800 font-bold border-orange-300" };
+                    } else if (member.role.includes("WAKIL")) {
+                        return (isGenap) ? { code: "PK", cls: "bg-orange-100 text-orange-800 font-bold border-orange-300" } : { code: "L", cls: "bg-red-100 text-red-700 font-bold border-red-300" };
+                    }
+                }
+                const day = dateObj.getDay();
+                if (day === 0 || day === 6) return { code: "L", cls: "bg-red-100 text-red-700" };
+                return { code: "PK", cls: "bg-orange-100 text-orange-800" };
+            }
+
+            const dayInCycle = (dayOfYear + group.baseOffset + (member.dayOffset || 0)) % 3;
+            const cycleIndex = Math.floor((dayOfYear + group.baseOffset + (member.dayOffset || 0)) / 3);
+            if (dayInCycle === 2) return { code: "L", cls: "bg-red-100 text-red-700 border-slate-200" };
+
+            const seq = SEQ_5; 
+            const pos = (member.offset + cycleIndex) % seq.length;
+            const loc = seq[pos];
+            const prefix = (dayInCycle === 0) ? "P" : "M";
+            let cls = "";
+            if (loc === "K") cls = (dayInCycle === 0) ? "bg-orange-100 text-orange-800" : "bg-orange-50 text-orange-700";
+            else if (loc === "B") cls = (dayInCycle === 0) ? "bg-emerald-100 text-emerald-800" : "bg-emerald-50 text-emerald-700";
+            else cls = (dayInCycle === 0) ? "bg-indigo-100 text-indigo-800" : "bg-indigo-50 text-indigo-700";
+
+            return { code: prefix + loc, cls: cls + " border-slate-200" };
+        }
+
         function findOffsetsFromTarget(groupIdx, memberIdx, dayOfYear, targetCode) {
             const group = staffData[groupIdx];
             const member = group.members[memberIdx];
@@ -591,12 +554,68 @@
             document.getElementById('newMemberName').value = "";
         }
 
+        function updateUIForAdmin() {
+            document.getElementById('btnSetupCloud').classList.add('hidden');
+            document.getElementById('btnEdit').classList.remove('hidden');
+            document.getElementById('adminPanel').classList.remove('hidden');
+        }
+
+        function updateUIForGuest() {
+            document.getElementById('btnSetupCloud').classList.remove('hidden');
+            document.getElementById('btnEdit').classList.add('hidden');
+            document.getElementById('adminPanel').classList.add('hidden');
+        }
+
+        function showGithubModal() {
+            document.getElementById('githubModal').classList.remove('hidden');
+            if(ghConfig.owner) {
+                document.getElementById('ghUsername').value = ghConfig.owner;
+                document.getElementById('ghRepo').value = ghConfig.repo;
+            }
+        }
+
+        function saveGithubConfig() {
+            ghConfig.owner = document.getElementById('ghUsername').value.trim();
+            ghConfig.repo = document.getElementById('ghRepo').value.trim();
+            ghConfig.token = document.getElementById('ghToken').value.trim();
+            
+            if(!ghConfig.token) return alert("Token Wajib Diisi!");
+
+            localStorage.setItem('gh_config_satpam', JSON.stringify(ghConfig));
+            document.getElementById('githubModal').classList.add('hidden');
+            isAdmin = true;
+            updateUIForAdmin();
+            syncFromGithubAPI(true);
+        }
+
+        function logoutAdmin() {
+            if(confirm("Logout Admin? Token akan dihapus dari browser ini.")) {
+                localStorage.removeItem('gh_config_satpam');
+                location.reload();
+            }
+        }
+
+        function updateStatus(type, msg) {
+            const el = document.getElementById('syncStatus');
+            el.className = `sync-status status-${type} inline-block mt-1`;
+            el.innerHTML = `<i class="fas fa-circle text-[6px] mr-1"></i> ${msg}`;
+        }
+
         function downloadPDF() {
-            const el = document.getElementById('contentToPrint');
-            const table = document.getElementById('tableContainer');
-            const oldStyle = table.style.overflow; table.style.overflow = "visible";
-            const opt = { margin: [5, 5, 5, 5], filename: `Jadwal_Satpam_${months[currentMonth]}_${year}.pdf`, image: {type:'jpeg',quality:0.98}, html2canvas: {scale:2.5, useCORS: true}, jsPDF: {unit:'mm', format:'a4', orientation:'landscape'} };
-            html2pdf().set(opt).from(el).save().then(() => table.style.overflow = oldStyle);
+            const element = document.getElementById('contentToPrint');
+            const originalOverflow = document.getElementById('tableContainer').style.overflow;
+            document.body.classList.add('pdf-mode');
+            const opt = {
+                margin: [5, 5, 5, 5],
+                filename: `Jadwal_Satpam_${months[currentMonth]}_${year}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, scrollY: 0, windowWidth: document.documentElement.offsetWidth },
+                jsPDF: { unit: 'mm', format: 'legal', orientation: 'landscape' }
+            };
+            html2pdf().set(opt).from(element).save().then(() => {
+                document.body.classList.remove('pdf-mode');
+                document.getElementById('tableContainer').style.overflow = originalOverflow;
+            });
         }
     </script>
 </body>
