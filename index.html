@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jadwal Satpam 2026 - v5.8 One Page A3</title>
+    <title>Jadwal Satpam 2026 - v6.0.1 Clean Print Fixed</title>
     <!-- Framework & Library -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -23,54 +23,56 @@
             .sticky-col { position: sticky; z-index: 10; border-right: 2px solid #cbd5e1 !important; }
         }
 
-        /* --- PDF MODE (CRITICAL FIXES FOR 1 PAGE) --- */
-        
-        /* 1. Container Fit */
+        /* --- PDF MODE (CLEAN STYLE) --- */
         .pdf-mode .print-container { 
             max-width: none !important; width: fit-content !important; min-width: 100% !important;
             box-shadow: none !important; border: none !important;
-            border-radius: 0 !important;
         }
 
-        /* 2. Kompresi Tabel & Font (8.5pt Optimal untuk A3) */
-        .pdf-mode .schedule-table { width: 100% !important; table-layout: auto !important; }
+        /* 1. TABLE CLEAN LOOK (No Heavy Colors) */
+        .pdf-mode .schedule-table { width: 100% !important; border-collapse: collapse !important; }
         .pdf-mode th, .pdf-mode td { 
             font-size: 8.5pt !important; 
-            padding: 1.5px 2px !important; /* Padding TIPIS agar baris tidak tinggi */
+            padding: 2px 2px !important; 
             white-space: nowrap; 
-            border: 0.5px solid #000 !important; 
+            border: 0.5px solid #000 !important; /* Garis tipis hitam */
             line-height: 1.1 !important;
+            color: #000 !important; /* Paksa teks hitam */
         }
 
-        /* 3. Kompresi Header & Judul (Buang Spasi Berlebih) */
-        .pdf-mode .header-section { padding: 5px 10px !important; border-bottom: 2px solid #000 !important; }
-        .pdf-mode h1 { font-size: 14pt !important; margin-bottom: 2px !important; letter-spacing: 0.1em !important; }
-        .pdf-mode h2 { font-size: 10pt !important; margin-bottom: 4px !important; }
-        .pdf-mode .period-box { padding: 2px 20px !important; margin-top: 2px !important; }
-        .pdf-mode .period-text { font-size: 9pt !important; }
-
-        /* 4. Kompresi Footer & Tanda Tangan */
-        .pdf-mode .footer-section { padding: 5px 10px !important; border-top: 2px solid #000 !important; }
-        .pdf-mode .legend-box { padding: 4px !important; }
-        .pdf-mode .signature-section { 
-            padding: 5px 0 0 0 !important; 
-            page-break-inside: avoid !important; 
+        /* 2. HEADER BERSIH (Hapus Blok Biru) */
+        .pdf-mode thead tr:first-child { 
+            background-color: #ffffff !important; 
+            color: #000000 !important; 
+            border-bottom: 2px solid #000 !important; 
         }
-        /* Mengurangi jarak tempat tanda tangan (mb-16 -> mb-6) agar muat */
-        .pdf-mode .sig-space { margin-bottom: 25px !important; } 
-        .pdf-mode .sig-text { font-size: 9pt !important; }
+        .pdf-mode thead tr:nth-child(2) th { 
+            background-color: #f3f4f6 !important; 
+            color: #000 !important;
+        }
+        
+        /* Header Title Adjustments */
+        .pdf-mode .header-section { padding: 5px 0 10px 0 !important; border-bottom: 2px double #000 !important; text-align: center; }
+        .pdf-mode h1 { font-size: 16pt !important; margin-bottom: 0 !important; color: #000 !important; }
+        .pdf-mode h2 { font-size: 11pt !important; margin-bottom: 5px !important; color: #000 !important; }
+        .pdf-mode .period-box { border: 1px solid #000 !important; padding: 2px 10px !important; margin-top: 5px !important; background: transparent !important; }
 
-        /* 5. Warna Header Biru Tetap */
-        .pdf-mode thead tr:first-child { background-color: #2563eb !important; color: white !important; -webkit-print-color-adjust: exact; }
-        .pdf-mode thead tr:nth-child(2) th { background-color: #eff6ff !important; -webkit-print-color-adjust: exact; }
+        /* 3. FOOTER COMPACT & BORDER TIPIS */
+        .pdf-mode .footer-section { padding: 5px 0 0 0 !important; border-top: none !important; }
+        .pdf-mode .legend-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .pdf-mode .legend-box { padding: 5px !important; border: 0.5px solid #000 !important; background: transparent !important; }
+        
+        /* 4. TANDA TANGAN */
+        .pdf-mode .signature-section { padding: 0 !important; margin-top: 10px !important; page-break-inside: avoid !important; }
+        .pdf-mode .sig-space { margin-bottom: 35px !important; } 
+        .pdf-mode .sig-text { font-size: 9pt !important; color: #000 !important; }
 
-        /* 6. Matikan Elemen Web */
+        /* Matikan elemen web saat PDF */
         .pdf-mode .sticky-col { position: static !important; border: 0.5px solid #000 !important; } 
         .pdf-mode #tableContainer { overflow: visible !important; } 
         .pdf-mode .no-print-pdf { display: none !important; }
 
-
-        /* UI Normal Styles */
+        /* UI Styles */
         .editable-input { width: 100%; background: #fff; border: 1px solid #94a3b8; padding: 2px 4px; font-weight: bold; border-radius: 4px; font-size: 11px; }
         .cell-selector { background: transparent; font-size: 9px; font-weight: bold; width: 100%; height: 100%; cursor: pointer; border: none; text-align: center; appearance: none; -webkit-appearance: none; }
         .holiday-date { background-color: #fee2e2 !important; color: #b91c1c !important; }
@@ -93,10 +95,10 @@
 <body class="p-2 md:p-6 text-slate-800">
 
     <!-- CONTROL PANEL -->
-    <div class="max-w-[1400px] mx-auto mb-4 bg-white p-4 rounded-xl shadow-lg border-t-4 border-blue-600 flex flex-col gap-4 no-print">
+    <div class="max-w-[1400px] mx-auto mb-4 bg-white p-4 rounded-xl shadow-lg border-t-4 border-slate-600 flex flex-col gap-4 no-print">
         <div class="flex flex-wrap gap-4 justify-between items-center border-b border-slate-100 pb-4">
             <div class="flex items-center gap-4">
-                <div class="bg-blue-600 text-white p-3 rounded-lg shadow-lg"><i class="fab fa-github fa-lg"></i></div>
+                <div class="bg-slate-700 text-white p-3 rounded-lg shadow-lg"><i class="fas fa-calendar-alt fa-lg"></i></div>
                 <div>
                     <h1 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sistem Penjadwalan Terpadu</h1>
                     <div class="flex items-center">
@@ -121,9 +123,15 @@
                 <button onclick="toggleEditMode()" id="btnEdit" class="hidden px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded shadow text-xs font-bold transition-all flex items-center gap-2">
                     <i class="fas fa-edit"></i> <span id="btnEditText">Edit Manual</span>
                 </button>
+                
+                <!-- TOMBOL SHARE WHATSAPP -->
+                <button onclick="shareToWhatsApp()" id="btnShareWA" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded shadow text-xs font-bold transition-all flex items-center gap-2">
+                    <i class="fab fa-whatsapp text-lg"></i> <span>Share WA</span>
+                </button>
+
                 <!-- Tombol PDF -->
                 <button onclick="downloadPDF()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded shadow text-xs font-bold transition-all flex items-center gap-2">
-                    <i class="fas fa-file-pdf"></i> <span>Download PDF (A3 Pas 1 Lembar)</span>
+                    <i class="fas fa-file-pdf"></i> <span>Download Clean PDF</span>
                 </button>
             </div>
         </div>
@@ -159,7 +167,6 @@
     </div>
 
     <!-- MAIN SCHEDULE -->
-    <!-- Tambahkan 'page-break-inside: avoid' untuk menjaga kesatuan -->
     <div id="contentToPrint" class="print-container max-w-[1400px] mx-auto bg-white shadow-xl border border-slate-300 rounded-lg overflow-hidden" style="page-break-inside: avoid;">
         
         <!-- HEADER SECTION -->
@@ -181,11 +188,9 @@
                         <th class="p-1 w-8 text-center border-blue-400">No</th>
                         <th class="p-1 w-32 sticky-col bg-blue-600 left-0 z-10 border-r border-blue-400">Jabatan</th>
                         <th class="p-1 w-40 sticky-col bg-blue-600 left-[128px] z-10 border-r border-blue-400 shadow-xl">Nama Petugas</th>
-                        <!-- Dates injected by JS -->
                     </tr>
                     <tr class="bg-blue-50 text-slate-800 text-[9px] text-center font-bold uppercase" id="daysRow">
                         <th colspan="3" class="bg-blue-100 sticky-col left-0 z-10 border-r border-slate-300">HARI</th>
-                        <!-- Day names injected by JS -->
                     </tr>
                 </thead>
                 <tbody id="scheduleBody" class="text-[10px] font-medium text-slate-700 bg-white"></tbody>
@@ -194,8 +199,9 @@
 
         <!-- FOOTER SECTION -->
         <div class="footer-section bg-white border-t-2 border-slate-800">
-            <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-[10px] border-b border-slate-200">
-                <div class="legend-box border border-slate-200 p-2 rounded bg-slate-50">
+            <!-- Grid Keterangan (Border Tipis) -->
+            <div class="legend-container p-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-[10px] border-b border-slate-200">
+                <div class="legend-box border border-slate-300 p-2 rounded bg-slate-50">
                     <h3 class="font-bold underline mb-2 text-slate-900">KODE JADWAL:</h3>
                     <div class="grid grid-cols-4 gap-2">
                         <div><span class="inline-block w-2 h-2 bg-orange-500 rounded-full mr-1"></span><b>K:</b> Kantor</div>
@@ -204,7 +210,7 @@
                         <div class="text-red-600"><span class="inline-block w-2 h-2 bg-red-500 rounded-full mr-1"></span><b>L:</b> Libur</div>
                     </div>
                 </div>
-                <div class="legend-box border border-slate-200 p-2 rounded bg-slate-50">
+                <div class="legend-box border border-slate-300 p-2 rounded bg-slate-50">
                     <h3 class="font-bold underline mb-2 text-slate-900">CATATAN:</h3>
                     <ul class="list-disc pl-4 space-y-1">
                         <li>Pimpinan Libur Bergantian saat Tanggal Merah.</li>
@@ -214,7 +220,7 @@
                 </div>
             </div>
 
-            <!-- Tanda Tangan: Menggunakan class 'sig-space' untuk mengatur tinggi saat PDF -->
+            <!-- Tanda Tangan (Posisi Pas di bawah Keterangan) -->
             <div class="signature-section p-6 pb-8 grid grid-cols-2 gap-8 text-[11px] text-slate-900" style="page-break-inside: avoid;">
                 <div class="flex flex-col items-center text-center">
                     <p class="sig-text mb-1">Mengetahui,</p>
@@ -231,7 +237,7 @@
         </div>
     </div>
 
-    <!-- GITHUB SETTINGS MODAL (Admin Only) -->
+    <!-- GITHUB SETTINGS MODAL -->
     <div id="githubModal" class="fixed inset-0 bg-black bg-opacity-80 hidden z-50 flex items-center justify-center p-4 no-print">
         <div class="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden border border-slate-600">
             <div class="bg-slate-800 p-4 flex justify-between items-center text-white">
@@ -242,7 +248,6 @@
                 <p class="text-xs text-slate-500 bg-slate-100 p-2 rounded">
                     Masukkan Token GitHub untuk mengaktifkan Mode Edit.
                 </p>
-                
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">GitHub Username</label>
                     <input type="text" id="ghUsername" class="w-full border p-2 rounded text-xs">
@@ -255,7 +260,6 @@
                     <label class="block text-xs font-bold text-slate-700 mb-1">Personal Access Token</label>
                     <input type="password" id="ghToken" class="w-full border p-2 rounded text-xs">
                 </div>
-
                 <button onclick="saveGithubConfig()" class="w-full bg-slate-800 hover:bg-black text-white py-2 rounded text-xs font-bold">
                     LOGIN ADMIN
                 </button>
@@ -264,144 +268,57 @@
     </div>
 
     <script>
+        // 1. VARIABLE CONSTANTS & GLOBALS (HARUS PALING ATAS)
         const year = 2026;
         const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
         const dayNamesIndo = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
-
         const holidays2026 = ["2026-0-1", "2026-0-27", "2026-1-17", "2026-2-20", "2026-2-31", "2026-3-1", "2026-4-1", "2026-4-14", "2026-4-25", "2026-5-1", "2026-5-17", "2026-6-7", "2026-7-17", "2026-9-20", "2026-11-25"];
-
         const SEQ_5 = ["K", "K", "S", "K", "B"]; 
-
         let staffData = [];
         let currentMonth = 0;
         let isEditMode = false;
         let isAdmin = false;
-        
         let ghConfig = { owner: '', repo: '', token: '', path: 'jadwal_data.json' };
 
-        window.onload = async function() {
-            const select = document.getElementById('monthSelector');
-            months.forEach((m, index) => {
-                const opt = document.createElement('option');
-                opt.value = index; opt.innerText = m; select.appendChild(opt);
-            });
+        // 2. UTILITY FUNCTIONS (DIDEFINISIKAN SEBELUM DIGUNAKAN)
+        function getDayOfYear(d) { const start = new Date(year, 0, 1); return Math.floor((d - start) / (1000 * 60 * 60 * 24)); }
+        function isHoliday(y, m, d) { return holidays2026.includes(`${y}-${m}-${d}`); }
+        function getHolidayIndex(y, m, d) { return holidays2026.indexOf(`${y}-${m}-${d}`); }
 
-            const savedGH = localStorage.getItem('gh_config_satpam');
-            if(savedGH) {
-                ghConfig = JSON.parse(savedGH);
-                isAdmin = true;
-                updateStatus('loading', 'Login Admin...');
-                updateUIForAdmin();
-                await syncFromGithubAPI();
-            } else {
-                isAdmin = false;
-                updateStatus('loading', 'Mengambil Data Publik...');
-                updateUIForGuest();
-                await loadPublicData();
-            }
-
-            renderSchedule();
-        };
-
-        async function loadPublicData() {
-            try {
-                const response = await fetch('jadwal_data.json?t=' + new Date().getTime());
-                if (!response.ok) throw new Error("Data belum tersedia di Cloud.");
-                staffData = await response.json();
-                updateStatus('public', 'Mode Publik (Read Only)');
-                renderSchedule();
-            } catch (e) {
-                console.warn("Gagal load public data, fallback ke local storage atau default.");
-                loadDataLocal();
-                updateStatus('idle', 'Offline / Local Data');
-            }
-        }
-
-        async function syncFromGithubAPI(isInit = false) {
-            updateStatus('loading', 'Syncing API...');
-            try {
-                const url = `https://api.github.com/repos/${ghConfig.owner}/${ghConfig.repo}/contents/${ghConfig.path}`;
-                const response = await fetch(url, {
-                    headers: {
-                        'Authorization': `token ${ghConfig.token}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    },
-                    cache: "no-store" 
-                });
-
-                if (response.status === 404) {
-                    if (isInit) await pushToGithub();
-                    return;
+        function getShiftFromSequence(dateObj, dayOfYear, group, member, reguSize) {
+            if (group.id === "pimpinan") {
+                const isHol = isHoliday(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+                if (isHol) {
+                    const holIdx = getHolidayIndex(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+                    const isGenap = (holIdx % 2 === 0);
+                    if (member.role.includes("KOMANDAN") && !member.role.includes("WAKIL")) {
+                        return (isGenap) ? { code: "L", cls: "bg-red-100 text-red-700 font-bold border-red-300" } : { code: "PK", cls: "bg-orange-100 text-orange-800 font-bold border-orange-300" };
+                    } else if (member.role.includes("WAKIL")) {
+                        return (isGenap) ? { code: "PK", cls: "bg-orange-100 text-orange-800 font-bold border-orange-300" } : { code: "L", cls: "bg-red-100 text-red-700 font-bold border-red-300" };
+                    }
                 }
-                if (!response.ok) throw new Error('Github Error');
-
-                const data = await response.json();
-                const content = decodeURIComponent(escape(atob(data.content)));
-                staffData = JSON.parse(content);
-                renderSchedule();
-                updateStatus('success', 'Admin Connected');
-
-            } catch (error) {
-                console.error(error);
-                updateStatus('error', 'Sync Failed');
-                loadDataLocal();
+                const day = dateObj.getDay();
+                if (day === 0 || day === 6) return { code: "L", cls: "bg-red-100 text-red-700" };
+                return { code: "PK", cls: "bg-orange-100 text-orange-800" };
             }
+
+            const dayInCycle = (dayOfYear + group.baseOffset + (member.dayOffset || 0)) % 3;
+            const cycleIndex = Math.floor((dayOfYear + group.baseOffset + (member.dayOffset || 0)) / 3);
+            if (dayInCycle === 2) return { code: "L", cls: "bg-red-100 text-red-700 border-slate-200" };
+
+            const seq = SEQ_5; 
+            const pos = (member.offset + cycleIndex) % seq.length;
+            const loc = seq[pos];
+            const prefix = (dayInCycle === 0) ? "P" : "M";
+            let cls = "";
+            if (loc === "K") cls = (dayInCycle === 0) ? "bg-orange-100 text-orange-800" : "bg-orange-50 text-orange-700";
+            else if (loc === "B") cls = (dayInCycle === 0) ? "bg-emerald-100 text-emerald-800" : "bg-emerald-50 text-emerald-700";
+            else cls = (dayInCycle === 0) ? "bg-indigo-100 text-indigo-800" : "bg-indigo-50 text-indigo-700";
+
+            return { code: prefix + loc, cls: cls + " border-slate-200" };
         }
 
-        async function pushToGithub() {
-            updateStatus('loading', 'Uploading...');
-            try {
-                const url = `https://api.github.com/repos/${ghConfig.owner}/${ghConfig.repo}/contents/${ghConfig.path}`;
-                let sha = null;
-
-                const getRes = await fetch(url, {
-                    headers: { 'Authorization': `token ${ghConfig.token}` },
-                    cache: "no-store"
-                });
-                if (getRes.ok) {
-                    const getData = await getRes.json();
-                    sha = getData.sha;
-                }
-
-                const contentStr = JSON.stringify(staffData, null, 2);
-                const contentBase64 = btoa(unescape(encodeURIComponent(contentStr)));
-
-                const body = {
-                    message: "Update Jadwal",
-                    content: contentBase64,
-                    sha: sha 
-                };
-
-                const putRes = await fetch(url, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `token ${ghConfig.token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(body)
-                });
-
-                if (!putRes.ok) throw new Error('Upload Failed');
-                updateStatus('success', 'Data Saved to Cloud');
-                
-            } catch (error) {
-                console.error(error);
-                updateStatus('error', 'Upload Error');
-                alert("Gagal Upload. Cek Token.");
-            }
-        }
-
-        function forcePushToGithub() {
-            if(confirm("Timpa data di Cloud dengan data Lokal saat ini?")) {
-                pushToGithub();
-            }
-        }
-
-        function reloadData() {
-            if(isAdmin) syncFromGithubAPI();
-            else loadPublicData();
-        }
-
+        // 3. CORE LOGIC (DATA MANAGEMENT)
         function loadDataLocal() {
             const stored = localStorage.getItem('satpamData2026_v5');
             if (stored) staffData = JSON.parse(stored);
@@ -435,9 +352,90 @@
                 ];
             }
         }
-
+        
         function saveData() { localStorage.setItem('satpamData2026_v5', JSON.stringify(staffData)); }
+        
+        function updateStatus(type, msg) {
+            const el = document.getElementById('syncStatus');
+            el.className = `sync-status status-${type} inline-block mt-1`;
+            el.innerHTML = `<i class="fas fa-circle text-[6px] mr-1"></i> ${msg}`;
+        }
 
+        async function loadPublicData() {
+            try {
+                const response = await fetch('jadwal_data.json?t=' + new Date().getTime());
+                if (!response.ok) throw new Error("Data belum tersedia di Cloud.");
+                staffData = await response.json();
+                updateStatus('public', 'Mode Publik (Read Only)');
+                renderSchedule();
+            } catch (e) {
+                console.warn("Gagal load public data, fallback ke local storage atau default.");
+                loadDataLocal();
+                updateStatus('idle', 'Offline / Local Data');
+                renderSchedule();
+            }
+        }
+
+        async function syncFromGithubAPI(isInit = false) {
+            updateStatus('loading', 'Syncing API...');
+            try {
+                const url = `https://api.github.com/repos/${ghConfig.owner}/${ghConfig.repo}/contents/${ghConfig.path}`;
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `token ${ghConfig.token}`, 'Accept': 'application/vnd.github.v3+json' },
+                    cache: "no-store" 
+                });
+
+                if (response.status === 404) {
+                    if (isInit) await pushToGithub();
+                    return;
+                }
+                if (!response.ok) throw new Error('Github Error');
+
+                const data = await response.json();
+                const content = decodeURIComponent(escape(atob(data.content)));
+                staffData = JSON.parse(content);
+                renderSchedule();
+                updateStatus('success', 'Admin Connected');
+
+            } catch (error) {
+                console.error(error);
+                updateStatus('error', 'Sync Failed');
+                loadDataLocal();
+                renderSchedule();
+            }
+        }
+
+        async function pushToGithub() {
+            updateStatus('loading', 'Uploading...');
+            try {
+                const url = `https://api.github.com/repos/${ghConfig.owner}/${ghConfig.repo}/contents/${ghConfig.path}`;
+                let sha = null;
+                const getRes = await fetch(url, {
+                    headers: { 'Authorization': `token ${ghConfig.token}` },
+                    cache: "no-store"
+                });
+                if (getRes.ok) {
+                    const getData = await getRes.json();
+                    sha = getData.sha;
+                }
+                const contentStr = JSON.stringify(staffData, null, 2);
+                const contentBase64 = btoa(unescape(encodeURIComponent(contentStr)));
+                const body = { message: "Update Jadwal", content: contentBase64, sha: sha };
+                const putRes = await fetch(url, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `token ${ghConfig.token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                if (!putRes.ok) throw new Error('Upload Failed');
+                updateStatus('success', 'Data Saved to Cloud');
+            } catch (error) {
+                console.error(error);
+                updateStatus('error', 'Upload Error');
+                alert("Gagal Upload. Cek Token.");
+            }
+        }
+
+        // 4. RENDER FUNCTION (INTI APLIKASI)
         function renderSchedule() {
             currentMonth = parseInt(document.getElementById('monthSelector').value);
             const totalDays = new Date(year, currentMonth + 1, 0).getDate();
@@ -457,7 +455,6 @@
                 const isSun = dateObj.getDay() === 0;
                 const isHol = isHoliday(year, currentMonth, d);
                 const thNum = document.createElement('th');
-                // GANTI WARNA: bg-slate-500 jadi text-blue-800 jika biasa, atau bg-red jika libur
                 thNum.className = `p-1 text-center min-w-[32px] font-bold ${isHol ? 'bg-red-500 text-white' : (isSun ? 'bg-red-100 text-red-700' : 'text-blue-900 bg-blue-50')}`;
                 thNum.innerText = d;
                 tableHeadRow.appendChild(thNum);
@@ -509,44 +506,7 @@
             });
         }
 
-        // --- UTILS & HELPERS ---
-        function getDayOfYear(d) { const start = new Date(year, 0, 1); return Math.floor((d - start) / (1000 * 60 * 60 * 24)); }
-        function isHoliday(y, m, d) { return holidays2026.includes(`${y}-${m}-${d}`); }
-        function getHolidayIndex(y, m, d) { return holidays2026.indexOf(`${y}-${m}-${d}`); }
-        
-        function getShiftFromSequence(dateObj, dayOfYear, group, member, reguSize) {
-            if (group.id === "pimpinan") {
-                const isHol = isHoliday(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
-                if (isHol) {
-                    const holIdx = getHolidayIndex(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
-                    const isGenap = (holIdx % 2 === 0);
-                    if (member.role.includes("KOMANDAN") && !member.role.includes("WAKIL")) {
-                        return (isGenap) ? { code: "L", cls: "bg-red-100 text-red-700 font-bold border-red-300" } : { code: "PK", cls: "bg-orange-100 text-orange-800 font-bold border-orange-300" };
-                    } else if (member.role.includes("WAKIL")) {
-                        return (isGenap) ? { code: "PK", cls: "bg-orange-100 text-orange-800 font-bold border-orange-300" } : { code: "L", cls: "bg-red-100 text-red-700 font-bold border-red-300" };
-                    }
-                }
-                const day = dateObj.getDay();
-                if (day === 0 || day === 6) return { code: "L", cls: "bg-red-100 text-red-700" };
-                return { code: "PK", cls: "bg-orange-100 text-orange-800" };
-            }
-
-            const dayInCycle = (dayOfYear + group.baseOffset + (member.dayOffset || 0)) % 3;
-            const cycleIndex = Math.floor((dayOfYear + group.baseOffset + (member.dayOffset || 0)) / 3);
-            if (dayInCycle === 2) return { code: "L", cls: "bg-red-100 text-red-700 border-slate-200" };
-
-            const seq = SEQ_5; 
-            const pos = (member.offset + cycleIndex) % seq.length;
-            const loc = seq[pos];
-            const prefix = (dayInCycle === 0) ? "P" : "M";
-            let cls = "";
-            if (loc === "K") cls = (dayInCycle === 0) ? "bg-orange-100 text-orange-800" : "bg-orange-50 text-orange-700";
-            else if (loc === "B") cls = (dayInCycle === 0) ? "bg-emerald-100 text-emerald-800" : "bg-emerald-50 text-emerald-700";
-            else cls = (dayInCycle === 0) ? "bg-indigo-100 text-indigo-800" : "bg-indigo-50 text-indigo-700";
-
-            return { code: prefix + loc, cls: cls + " border-slate-200" };
-        }
-
+        // 5. INTERACTION FUNCTIONS
         function findOffsetsFromTarget(groupIdx, memberIdx, dayOfYear, targetCode) {
             const group = staffData[groupIdx];
             const member = group.members[memberIdx];
@@ -589,19 +549,18 @@
             renderSchedule(); 
             document.getElementById('newMemberName').value = "";
         }
-
+        function forcePushToGithub() { if(confirm("Timpa data di Cloud dengan data Lokal saat ini?")) pushToGithub(); }
+        function reloadData() { if(isAdmin) syncFromGithubAPI(); else loadPublicData(); }
         function updateUIForAdmin() {
             document.getElementById('btnSetupCloud').classList.add('hidden');
             document.getElementById('btnEdit').classList.remove('hidden');
             document.getElementById('adminPanel').classList.remove('hidden');
         }
-
         function updateUIForGuest() {
             document.getElementById('btnSetupCloud').classList.remove('hidden');
             document.getElementById('btnEdit').classList.add('hidden');
             document.getElementById('adminPanel').classList.add('hidden');
         }
-
         function showGithubModal() {
             document.getElementById('githubModal').classList.remove('hidden');
             if(ghConfig.owner) {
@@ -609,21 +568,17 @@
                 document.getElementById('ghRepo').value = ghConfig.repo;
             }
         }
-
         function saveGithubConfig() {
             ghConfig.owner = document.getElementById('ghUsername').value.trim();
             ghConfig.repo = document.getElementById('ghRepo').value.trim();
             ghConfig.token = document.getElementById('ghToken').value.trim();
-            
             if(!ghConfig.token) return alert("Token Wajib Diisi!");
-
             localStorage.setItem('gh_config_satpam', JSON.stringify(ghConfig));
             document.getElementById('githubModal').classList.add('hidden');
             isAdmin = true;
             updateUIForAdmin();
             syncFromGithubAPI(true);
         }
-
         function logoutAdmin() {
             if(confirm("Logout Admin? Token akan dihapus dari browser ini.")) {
                 localStorage.removeItem('gh_config_satpam');
@@ -631,45 +586,92 @@
             }
         }
 
-        function updateStatus(type, msg) {
-            const el = document.getElementById('syncStatus');
-            el.className = `sync-status status-${type} inline-block mt-1`;
-            el.innerHTML = `<i class="fas fa-circle text-[6px] mr-1"></i> ${msg}`;
-        }
-
-        // --- UPDATED PDF FUNCTION (FIX BORDER & A3) ---
+        // 6. EXPORT & SHARE FUNCTIONS
         function downloadPDF() {
             const element = document.getElementById('contentToPrint');
             const originalOverflow = document.getElementById('tableContainer').style.overflow;
-            
-            // 1. Activate PDF Mode CSS (Agar container melebar penuh)
             document.body.classList.add('pdf-mode');
-
-            // 2. Konfigurasi A3 Landscape
             const opt = {
                 margin: [5, 5, 5, 5],
                 filename: `Jadwal_Satpam_${months[currentMonth]}_${year}.pdf`,
                 image: { type: 'jpeg', quality: 1.0 }, 
-                html2canvas: { 
-                    scale: 3, 
-                    useCORS: true, 
-                    scrollY: 0, 
-                    windowWidth: document.documentElement.offsetWidth // Tangkap lebar layar penuh
-                },
-                jsPDF: { 
-                    unit: 'mm', 
-                    format: 'a3', // A3 memberi ruang agar tabel tidak terpotong
-                    orientation: 'landscape' 
-                }
+                html2canvas: { scale: 3, useCORS: true, scrollY: 0, windowWidth: document.documentElement.offsetWidth },
+                jsPDF: { unit: 'mm', format: 'a3', orientation: 'landscape' }
             };
-
-            // 3. Generate
             html2pdf().set(opt).from(element).save().then(() => {
-                // Restore UI ke normal
                 document.body.classList.remove('pdf-mode');
                 document.getElementById('tableContainer').style.overflow = originalOverflow;
             });
         }
+
+        async function shareToWhatsApp() {
+            const element = document.getElementById('contentToPrint');
+            const originalOverflow = document.getElementById('tableContainer').style.overflow;
+            const btn = document.getElementById('btnShareWA');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Proses...';
+            btn.disabled = true;
+            document.body.classList.add('pdf-mode');
+            const opt = {
+                margin: [5, 5, 5, 5],
+                filename: `Jadwal_Satpam_${months[currentMonth]}_${year}.pdf`,
+                image: { type: 'jpeg', quality: 1.0 }, 
+                html2canvas: { scale: 3, useCORS: true, scrollY: 0, windowWidth: document.documentElement.offsetWidth },
+                jsPDF: { unit: 'mm', format: 'a3', orientation: 'landscape' }
+            };
+            try {
+                const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
+                document.body.classList.remove('pdf-mode');
+                document.getElementById('tableContainer').style.overflow = originalOverflow;
+                const file = new File([pdfBlob], `Jadwal_${months[currentMonth]}.pdf`, { type: 'application/pdf' });
+
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Jadwal Satpam',
+                        text: `Berikut Jadwal Satpam Bulan ${months[currentMonth]} ${year}`
+                    });
+                } else {
+                    alert("Browser ini tidak mendukung share file langsung. File akan di-download.");
+                    const url = URL.createObjectURL(pdfBlob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `Jadwal_Satpam_${months[currentMonth]}_${year}.pdf`;
+                    a.click();
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Gagal memproses share: " + err.message);
+                document.body.classList.remove('pdf-mode');
+                document.getElementById('tableContainer').style.overflow = originalOverflow;
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // 7. WINDOW ONLOAD (INITIALIZATION - DILETAKKAN PALING BAWAH)
+        window.onload = async function() {
+            const select = document.getElementById('monthSelector');
+            months.forEach((m, index) => {
+                const opt = document.createElement('option');
+                opt.value = index; opt.innerText = m; select.appendChild(opt);
+            });
+
+            const savedGH = localStorage.getItem('gh_config_satpam');
+            if(savedGH) {
+                ghConfig = JSON.parse(savedGH);
+                isAdmin = true;
+                updateStatus('loading', 'Login Admin...');
+                updateUIForAdmin();
+                await syncFromGithubAPI();
+            } else {
+                isAdmin = false;
+                updateStatus('loading', 'Mengambil Data Publik...');
+                updateUIForGuest();
+                await loadPublicData();
+            }
+        };
     </script>
 </body>
 </html>
